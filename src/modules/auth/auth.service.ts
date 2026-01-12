@@ -1,14 +1,10 @@
 import {
   BadRequestException,
   ForbiddenException,
-  Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import * as argon2 from 'argon2';
-import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { DATABASE_CONNECTION } from 'src/database/database.module';
-import * as schema from 'src/database/schema';
 import { AuthRepository } from './auth.repository';
 import { LoginAdminDto, LoginUserDto } from './dto/login.dto';
 import { TokenService } from './helper/token.service';
@@ -16,8 +12,6 @@ import { TokenService } from './helper/token.service';
 @Injectable()
 export class AuthService {
   constructor(
-    @Inject(DATABASE_CONNECTION)
-    private readonly db: NodePgDatabase<typeof schema>,
     private readonly authRepository: AuthRepository,
     private readonly tokenService: TokenService,
   ) {}
