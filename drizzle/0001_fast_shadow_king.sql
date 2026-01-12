@@ -1,0 +1,2 @@
+CREATE TYPE "public"."diabetes_type" AS ENUM('TYPE_1', 'TYPE_2', 'GDM', 'OTHER');--> statement-breakpoint
+ALTER TABLE "patients" ALTER COLUMN "diabetes_type" SET DATA TYPE "public"."diabetes_type" USING "diabetes_type"::"public"."diabetes_type";
