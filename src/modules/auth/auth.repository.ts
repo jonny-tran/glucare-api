@@ -70,4 +70,65 @@ export class AuthRepository {
       .set({ hashedRefreshToken })
       .where(eq(schema.users.id, userId));
   }
+
+  async createPatient(
+    userData: {
+      phoneNumber: string;
+      password: string;
+      role: 'PATIENT';
+    },
+    patientData: {
+      fullName: string;
+      gender: 'MALE' | 'FEMALE' | 'OTHER';
+      dateOfBirth: string;
+    },
+  ) {
+    return this.db.transaction(async (tx) => {
+      const [user] = await tx.insert(schema.users).values(userData).returning();
+
+      const [patient] = await tx
+        .insert(schema.patients)
+        .values({
+          userId: user.id,
+          ...patientData,
+        })
+        .returning();
+
+      return { user, patient };
+    });
+  }
+
+  async findDoctorByLicense(licenseNumber: string) {
+    return this.db.query.doctors.findFirst({
+      where: eq(schema.doctors.licenseNumber, licenseNumber),
+    });
+  }
+
+  async createDoctor(
+    userData: {
+      phoneNumber: string;
+      password: string;
+      role: 'DOCTOR';
+    },
+    doctorData: {
+      fullName: string;
+      licenseNumber: string;
+      specialization?: string;
+      hospital?: string;
+    },
+  ) {
+    return this.db.transaction(async (tx) => {
+      const [user] = await tx.insert(schema.users).values(userData).returning();
+
+      const [doctor] = await tx
+        .insert(schema.doctors)
+        .values({
+          userId: user.id,
+          ...doctorData,
+        })
+        .returning();
+
+      return { user, doctor };
+    });
+  }
 }

@@ -12,15 +12,21 @@ import { Throttle } from '@nestjs/throttler';
 import { ResponseMessage } from 'src/common/decorators/response-message.decorator';
 import { AuthService } from './auth.service';
 import {
+  ApiCreateDoctor,
   ApiGetProfile,
   ApiLoginAdmin,
   ApiLoginUser,
   ApiLogout,
   ApiRefresh,
+  ApiRegisterPatient,
 } from './auth.swagger';
 import { CurrentUser } from './decorators/current-user.decorator';
+import { Roles } from './decorators/roles.decorator';
+import { CreateDoctorDto } from './dto/create-doctor.dto';
 import { LoginAdminDto, LoginUserDto, RefreshTokenDto } from './dto/login.dto';
+import { RegisterPatientDto } from './dto/register.dto';
 import { AtGuard } from './guards/auth.guard';
+import { RolesGuard } from './guards/roles.guard';
 
 @ApiTags('Authentication')
 @Controller({
@@ -71,5 +77,24 @@ export class AuthController {
   @ResponseMessage('Đăng xuất thành công')
   async logout(@CurrentUser('sub') userId: string) {
     return this.authService.logout(userId);
+  }
+
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  @Post('register/patient')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiRegisterPatient()
+  @ResponseMessage('Đăng ký thành công')
+  async registerPatient(@Body() dto: RegisterPatientDto) {
+    return this.authService.registerPatient(dto);
+  }
+
+  @UseGuards(AtGuard, RolesGuard)
+  @Roles('ADMIN')
+  @Post('register/doctor')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiCreateDoctor()
+  @ResponseMessage('Tạo tài khoản bác sĩ thành công')
+  async createDoctor(@Body() dto: CreateDoctorDto) {
+    return this.authService.createDoctor(dto);
   }
 }

@@ -6,7 +6,9 @@ import {
 } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { AuthRepository } from './auth.repository';
+import { CreateDoctorDto } from './dto/create-doctor.dto';
 import { LoginAdminDto, LoginUserDto, RefreshTokenDto } from './dto/login.dto';
+import { RegisterPatientDto } from './dto/register.dto';
 import { TokenService } from './helper/token.service';
 
 @Injectable()
@@ -92,5 +94,84 @@ export class AuthService {
 
   async logout(userId: string) {
     await this.authRepository.updateRefreshToken(userId, null);
+  }
+
+  async registerPatient(dto: RegisterPatientDto) {
+    const existingUser = await this.authRepository.findUserByPhoneNumber(
+      dto.phoneNumber,
+    );
+
+    if (existingUser) {
+      throw new BadRequestException('Số điện thoại đã được đăng ký');
+    }
+
+    const hashedPassword = await argon2.hash(dto.password);
+
+    const userData = {
+      phoneNumber: dto.phoneNumber,
+      password: hashedPassword,
+      role: 'PATIENT' as const,
+    };
+
+    const patientData = {
+      fullName: dto.fullName,
+      gender: dto.gender,
+      dateOfBirth: dto.dateOfBirth.toISOString().split('T')[0],
+    };
+
+    const result = await this.authRepository.createPatient(
+      userData,
+      patientData,
+    );
+
+    return {
+      id: result.user.id,
+      phoneNumber: result.user.phoneNumber,
+      role: result.user.role,
+      fullName: result.patient.fullName,
+    };
+  }
+
+  async createDoctor(dto: CreateDoctorDto) {
+    const existingPhone = await this.authRepository.findUserByPhoneNumber(
+      dto.phoneNumber,
+    );
+
+    if (existingPhone) {
+      throw new BadRequestException('Số điện thoại đã được đăng ký');
+    }
+
+    const existingLicense = await this.authRepository.findDoctorByLicense(
+      dto.licenseNumber,
+    );
+
+    if (existingLicense) {
+      throw new BadRequestException('Số giấy phép hành nghề đã tồn tại');
+    }
+
+    const hashedPassword = await argon2.hash(dto.password);
+
+    const userData = {
+      phoneNumber: dto.phoneNumber,
+      password: hashedPassword,
+      role: 'DOCTOR' as const,
+    };
+
+    const doctorData = {
+      fullName: dto.fullName,
+      licenseNumber: dto.licenseNumber,
+      specialization: dto.specialization,
+      hospital: dto.hospital,
+    };
+
+    const result = await this.authRepository.createDoctor(userData, doctorData);
+
+    return {
+      id: result.user.id,
+      phoneNumber: result.user.phoneNumber,
+      role: result.user.role,
+      fullName: result.doctor.fullName,
+      licenseNumber: result.doctor.licenseNumber,
+    };
   }
 }

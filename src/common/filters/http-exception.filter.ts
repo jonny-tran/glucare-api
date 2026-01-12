@@ -3,6 +3,7 @@ import {
   Catch,
   ExceptionFilter,
   HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { Response } from 'express';
 
@@ -14,7 +15,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const status = exception.getStatus();
     const exceptionResponse = exception.getResponse();
 
-    let message = 'Internal server error';
+    let message = 'Lỗi hệ thống';
+
     if (typeof exceptionResponse === 'string') {
       message = exceptionResponse;
     } else if (
@@ -22,11 +24,28 @@ export class HttpExceptionFilter implements ExceptionFilter {
       exceptionResponse !== null
     ) {
       const errorObj = exceptionResponse as Record<string, unknown>;
-      message =
-        (typeof errorObj.message === 'string' ? errorObj.message : null) ||
-        (typeof errorObj.error === 'string'
-          ? errorObj.error
-          : 'Internal server error');
+
+      if (Array.isArray(errorObj.message)) {
+        message =
+          typeof errorObj.message[0] === 'string'
+            ? errorObj.message[0]
+            : 'Lỗi dữ liệu đầu vào';
+      } else if (typeof errorObj.message === 'string') {
+        message = errorObj.message;
+      } else if (typeof errorObj.error === 'string') {
+        message = errorObj.error;
+      }
+    }
+
+    switch (status as HttpStatus) {
+      case HttpStatus.TOO_MANY_REQUESTS:
+        message =
+          'Bạn gửi quá nhiều yêu cầu liên tục, vui lòng thử lại sau ít phút';
+        break;
+
+      case HttpStatus.INTERNAL_SERVER_ERROR:
+        message = 'Chúng tôi hiện đang bảo trì, vui lòng thử lại sau';
+        break;
     }
 
     response.status(status).json({

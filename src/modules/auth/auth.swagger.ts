@@ -5,7 +5,9 @@ import {
   ApiOperation,
   ApiResponse,
 } from '@nestjs/swagger';
+import { CreateDoctorDto } from './dto/create-doctor.dto';
 import { LoginAdminDto, LoginUserDto, RefreshTokenDto } from './dto/login.dto';
+import { RegisterPatientDto } from './dto/register.dto';
 
 const createErrorSchema = (
   status: number,
@@ -29,13 +31,13 @@ const CommonAuthErrors = () =>
     ApiResponse(
       createErrorSchema(
         HttpStatus.TOO_MANY_REQUESTS,
-        'ThrottlerException: Too Many Requests',
+        'Bạn gửi quá nhiều yêu cầu liên tục, vui lòng thử lại sau ít phút',
       ),
     ),
     ApiResponse(
       createErrorSchema(
         HttpStatus.INTERNAL_SERVER_ERROR,
-        'Internal server error',
+        'Chúng tôi hiện đang bảo trì, vui lòng thử lại sau',
       ),
     ),
   );
@@ -186,6 +188,75 @@ export const ApiLogout = () =>
         },
       },
     }),
+    ApiResponse(
+      createErrorSchema(
+        HttpStatus.UNAUTHORIZED,
+        'Token không hợp lệ hoặc đã hết hạn',
+      ),
+    ),
+    CommonAuthErrors(),
+  );
+
+export const ApiRegisterPatient = () =>
+  applyDecorators(
+    ApiOperation({ summary: 'Đăng ký tài khoản Bệnh nhân' }),
+    ApiBody({ type: RegisterPatientDto }),
+    ApiResponse({
+      status: HttpStatus.CREATED,
+      description: 'Đăng ký thành công',
+      schema: {
+        example: {
+          statusCode: 201,
+          message: 'Đăng ký thành công',
+          data: {
+            id: 'uuid-string',
+            phoneNumber: '0123456789',
+            role: 'PATIENT',
+            fullName: 'Nguyễn Văn A',
+          },
+        },
+      },
+    }),
+    ApiResponse(
+      createErrorSchema(
+        HttpStatus.BAD_REQUEST,
+        'Số điện thoại đã được đăng ký',
+      ),
+    ),
+    CommonAuthErrors(),
+  );
+
+export const ApiCreateDoctor = () =>
+  applyDecorators(
+    ApiBearerAuth(),
+    ApiOperation({ summary: 'Tạo tài khoản Bác sĩ (Chỉ Admin)' }),
+    ApiBody({ type: CreateDoctorDto }),
+    ApiResponse({
+      status: HttpStatus.CREATED,
+      description: 'Tạo tài khoản thành công',
+      schema: {
+        example: {
+          statusCode: 201,
+          message: 'Tạo tài khoản bác sĩ thành công',
+          data: {
+            id: 'uuid-string',
+            phoneNumber: '0987654321',
+            role: 'DOCTOR',
+            fullName: 'BS. Nguyễn Văn B',
+            licenseNumber: 'DOC-123456',
+          },
+        },
+      },
+    }),
+    ApiResponse(
+      createErrorSchema(HttpStatus.BAD_REQUEST, [
+        'Số điện thoại đã được đăng ký',
+        'Số giấy phép hành nghề đã tồn tại',
+      ]),
+    ),
+    ApiResponse(
+      createErrorSchema(HttpStatus.FORBIDDEN, 'Bạn không có quyền truy cập'),
+    ),
     ApiResponse(
       createErrorSchema(
         HttpStatus.UNAUTHORIZED,
