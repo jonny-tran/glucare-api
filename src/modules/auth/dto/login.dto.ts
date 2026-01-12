@@ -50,3 +50,13 @@ export class LoginUserDto {
   @MinLength(6, { message: 'Mật khẩu phải từ 6 ký tự trở lên' })
   password: string;
 }
+
+export class RefreshTokenDto {
+  @ApiProperty({
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+    description: 'Refresh Token để làm mới Access Token',
+  })
+  @IsString()
+  @IsNotEmpty({ message: 'Refresh Token không được để trống' })
+  refreshToken: string;
+}

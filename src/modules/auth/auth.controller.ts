@@ -11,9 +11,15 @@ import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { ResponseMessage } from 'src/common/decorators/response-message.decorator';
 import { AuthService } from './auth.service';
-import { ApiGetProfile, ApiLoginAdmin, ApiLoginUser } from './auth.swagger';
+import {
+  ApiGetProfile,
+  ApiLoginAdmin,
+  ApiLoginUser,
+  ApiLogout,
+  ApiRefresh,
+} from './auth.swagger';
 import { CurrentUser } from './decorators/current-user.decorator';
-import { LoginAdminDto, LoginUserDto } from './dto/login.dto';
+import { LoginAdminDto, LoginUserDto, RefreshTokenDto } from './dto/login.dto';
 import { AtGuard } from './guards/auth.guard';
 
 @ApiTags('Authentication')
@@ -48,5 +54,22 @@ export class AuthController {
   @ResponseMessage('Lấy thông tin người dùng thành công')
   async getMe(@CurrentUser('sub') userId: string) {
     return this.authService.getProfile(userId);
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiRefresh()
+  @ResponseMessage('Làm mới token thành công')
+  async refresh(@Body() dto: RefreshTokenDto) {
+    return this.authService.refreshTokens(dto);
+  }
+
+  @UseGuards(AtGuard)
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  @ApiLogout()
+  @ResponseMessage('Đăng xuất thành công')
+  async logout(@CurrentUser('sub') userId: string) {
+    return this.authService.logout(userId);
   }
 }

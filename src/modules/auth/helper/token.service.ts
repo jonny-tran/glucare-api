@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
@@ -37,6 +37,24 @@ export class TokenService {
       userId,
       role,
     };
+  }
+
+  async verifyRefreshToken(
+    token: string,
+  ): Promise<{ sub: string; role: string }> {
+    try {
+      const payload = await this.jwtService.verifyAsync<{
+        sub: string;
+        role: string;
+      }>(token, {
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+      });
+      return payload;
+    } catch {
+      throw new UnauthorizedException(
+        'Refresh Token không hợp lệ hoặc đã hết hạn',
+      );
+    }
   }
 
   async updateRefreshToken(userId: string, refreshToken: string) {

@@ -5,7 +5,7 @@ import {
   ApiOperation,
   ApiResponse,
 } from '@nestjs/swagger';
-import { LoginAdminDto, LoginUserDto } from './dto/login.dto';
+import { LoginAdminDto, LoginUserDto, RefreshTokenDto } from './dto/login.dto';
 
 const createErrorSchema = (
   status: number,
@@ -130,6 +130,59 @@ export const ApiGetProfile = () =>
               hospital: 'Cho Ray Hospital',
             },
           },
+        },
+      },
+    }),
+    ApiResponse(
+      createErrorSchema(
+        HttpStatus.UNAUTHORIZED,
+        'Token không hợp lệ hoặc đã hết hạn',
+      ),
+    ),
+    CommonAuthErrors(),
+  );
+
+export const ApiRefresh = () =>
+  applyDecorators(
+    ApiOperation({ summary: 'Làm mới Token' }),
+    ApiBody({ type: RefreshTokenDto }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description: 'Làm mới token thành công',
+      schema: {
+        example: {
+          statusCode: 200,
+          message: 'Làm mới token thành công',
+          data: {
+            accessToken: 'eyJhbGciOiJIUz...',
+            refreshToken: 'eyJhbGciOiJIUz...',
+            userId: 'uuid-string',
+            role: 'PATIENT',
+          },
+        },
+      },
+    }),
+    ApiResponse(
+      createErrorSchema(
+        HttpStatus.UNAUTHORIZED,
+        'Refresh Token không hợp lệ hoặc đã hết hạn',
+      ),
+    ),
+    CommonAuthErrors(),
+  );
+
+export const ApiLogout = () =>
+  applyDecorators(
+    ApiBearerAuth(),
+    ApiOperation({ summary: 'Đăng xuất' }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description: 'Đăng xuất thành công',
+      schema: {
+        example: {
+          statusCode: 200,
+          message: 'Đăng xuất thành công',
+          data: null,
         },
       },
     }),

@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { AuthRepository } from './auth.repository';
-import { LoginAdminDto, LoginUserDto } from './dto/login.dto';
+import { LoginAdminDto, LoginUserDto, RefreshTokenDto } from './dto/login.dto';
 import { TokenService } from './helper/token.service';
 
 @Injectable()
@@ -61,5 +61,36 @@ export class AuthService {
       ...userInfo,
       profile,
     };
+  }
+
+  async refreshTokens(dto: RefreshTokenDto) {
+    const payload = await this.tokenService.verifyRefreshToken(
+      dto.refreshToken,
+    );
+
+    const user = await this.authRepository.findById(payload.sub);
+
+    if (!user || !user.hashedRefreshToken) {
+      throw new UnauthorizedException(
+        'Refresh Token không hợp lệ hoặc đã hết hạn',
+      );
+    }
+
+    const refreshTokenMatches = await argon2.verify(
+      user.hashedRefreshToken,
+      dto.refreshToken,
+    );
+
+    if (!refreshTokenMatches) {
+      throw new UnauthorizedException(
+        'Refresh Token không hợp lệ hoặc đã hết hạn',
+      );
+    }
+
+    return this.tokenService.generateAuthResponse(user.id, user.role);
+  }
+
+  async logout(userId: string) {
+    await this.authRepository.updateRefreshToken(userId, null);
   }
 }

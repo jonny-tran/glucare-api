@@ -50,4 +50,24 @@ export class AuthRepository {
       },
     });
   }
+
+  async findById(userId: string) {
+    return this.db.query.users.findFirst({
+      where: eq(schema.users.id, userId),
+      columns: {
+        id: true,
+        email: true,
+        phoneNumber: true,
+        role: true,
+        hashedRefreshToken: true,
+      },
+    });
+  }
+
+  async updateRefreshToken(userId: string, hashedRefreshToken: string | null) {
+    await this.db
+      .update(schema.users)
+      .set({ hashedRefreshToken })
+      .where(eq(schema.users.id, userId));
+  }
 }
