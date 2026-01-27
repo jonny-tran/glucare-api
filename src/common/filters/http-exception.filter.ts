@@ -4,18 +4,22 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(HttpExceptionFilter.name);
   catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const status = exception.getStatus();
+    const request = ctx.getRequest<Request>();
+    const status: HttpStatus = exception.getStatus();
     const exceptionResponse = exception.getResponse();
 
-    let message = 'Lỗi hệ thống';
+    let message: string = 'Lỗi hệ thống';
+    let error: string = 'Internal Server Error';
 
     if (typeof exceptionResponse === 'string') {
       message = exceptionResponse;
@@ -32,26 +36,39 @@ export class HttpExceptionFilter implements ExceptionFilter {
             : 'Lỗi dữ liệu đầu vào';
       } else if (typeof errorObj.message === 'string') {
         message = errorObj.message;
-      } else if (typeof errorObj.error === 'string') {
-        message = errorObj.error;
+      }
+
+      if (typeof errorObj.error === 'string') {
+        error = errorObj.error;
       }
     }
-
-    switch (status as HttpStatus) {
-      case HttpStatus.TOO_MANY_REQUESTS:
-        message =
-          'Bạn gửi quá nhiều yêu cầu liên tục, vui lòng thử lại sau ít phút';
+    switch (status) {
+      case HttpStatus.UNAUTHORIZED:
+        error = 'Unauthorized';
+        if (message.startsWith('Unauthorized')) {
+          message = 'Chưa đăng nhập hoặc Token hết hạn';
+        }
         break;
-
+      case HttpStatus.NOT_FOUND:
+        error = 'Not Found';
+        if (message.startsWith('Cannot')) {
+          message = `Đường dẫn không tồn tại: ${request.method} ${request.url}`;
+        }
+        break;
+      case HttpStatus.TOO_MANY_REQUESTS:
+        message = 'Bạn gửi quá nhiều yêu cầu, vui lòng thử lại sau';
+        break;
       case HttpStatus.INTERNAL_SERVER_ERROR:
-        message = 'Chúng tôi hiện đang bảo trì, vui lòng thử lại sau';
+        message = 'Lỗi máy chủ nội bộ, vui lòng liên hệ Admin';
         break;
     }
 
     response.status(status).json({
       statusCode: status,
       message: message,
-      data: null,
+      error: error,
+      timestamp: new Date().toISOString(),
+      path: request.url,
     });
   }
 }

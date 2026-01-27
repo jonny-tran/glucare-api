@@ -37,7 +37,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 
-  // Ensure PORT is defined
   if (!port) {
     throw new Error('PORT is not defined in environment variables');
   }
