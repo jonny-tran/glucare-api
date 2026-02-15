@@ -29,7 +29,6 @@ export class AuthRepository {
       with: {
         patient: {
           columns: {
-            fullName: true,
             gender: true,
             dateOfBirth: true,
             diabetesType: true,
@@ -37,7 +36,6 @@ export class AuthRepository {
         },
         doctor: {
           columns: {
-            fullName: true,
             licenseNumber: true,
             specialization: true,
             hospital: true,
@@ -76,10 +74,10 @@ export class AuthRepository {
       phoneNumber: string;
       password: string;
       role: 'PATIENT';
+      fullName: string;
     },
     patientData: {
-      fullName: string;
-      gender: 'MALE' | 'FEMALE' | 'OTHER';
+      gender: 'M' | 'F' | 'O';
       dateOfBirth: string;
     },
   ) {
@@ -109,9 +107,9 @@ export class AuthRepository {
       phoneNumber: string;
       password: string;
       role: 'DOCTOR';
+      fullName: string;
     },
     doctorData: {
-      fullName: string;
       licenseNumber: string;
       specialization?: string;
       hospital?: string;

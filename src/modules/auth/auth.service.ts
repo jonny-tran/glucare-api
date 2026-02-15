@@ -51,7 +51,7 @@ export class AuthService {
 
     if (!user) throw new BadRequestException('User not found');
 
-    const { patient, doctor, ...userInfo } = user || {};
+    const { patient, doctor, ...userInfo } = user;
     let profile: typeof patient | typeof doctor | null = null;
     if (user?.role === 'PATIENT' && patient) {
       profile = patient;
@@ -111,11 +111,17 @@ export class AuthService {
       phoneNumber: dto.phoneNumber,
       password: hashedPassword,
       role: 'PATIENT' as const,
+      fullName: dto.fullName,
+    };
+
+    const genderMap: Record<string, 'M' | 'F' | 'O'> = {
+      MALE: 'M',
+      FEMALE: 'F',
+      OTHER: 'O',
     };
 
     const patientData = {
-      fullName: dto.fullName,
-      gender: dto.gender,
+      gender: genderMap[dto.gender],
       dateOfBirth: dto.dateOfBirth.toISOString().split('T')[0],
     };
 
@@ -128,7 +134,7 @@ export class AuthService {
       id: result.user.id,
       phoneNumber: result.user.phoneNumber,
       role: result.user.role,
-      fullName: result.patient.fullName,
+      fullName: result.user.fullName,
     };
   }
 
@@ -155,10 +161,10 @@ export class AuthService {
       phoneNumber: dto.phoneNumber,
       password: hashedPassword,
       role: 'DOCTOR' as const,
+      fullName: dto.fullName,
     };
 
     const doctorData = {
-      fullName: dto.fullName,
       licenseNumber: dto.licenseNumber,
       specialization: dto.specialization,
       hospital: dto.hospital,
@@ -170,7 +176,7 @@ export class AuthService {
       id: result.user.id,
       phoneNumber: result.user.phoneNumber,
       role: result.user.role,
-      fullName: result.doctor.fullName,
+      fullName: result.user.fullName,
       licenseNumber: result.doctor.licenseNumber,
     };
   }

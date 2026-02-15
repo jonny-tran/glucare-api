@@ -54,14 +54,13 @@ async function main() {
         phoneNumber: docPhone1,
         password: hashedPassword,
         role: 'DOCTOR',
+        fullName: 'Dr. Strange',
         isActive: true,
-        isPhoneVerified: true,
       })
       .returning({ id: schema.users.id });
 
     await db.insert(schema.doctors).values({
       userId: userDoc1.id,
-      fullName: 'Dr. Strange',
       licenseNumber: 'DOC-001',
       specialization: 'Endocrinology (Nội tiết)',
       hospital: 'Bệnh viện Chợ Rẫy',
@@ -73,8 +72,8 @@ async function main() {
         phoneNumber: docPhone2,
         password: hashedPassword,
         role: 'DOCTOR',
+        fullName: 'Dr. House',
         isActive: true,
-        isPhoneVerified: true,
       })
       .returning({ id: schema.users.id });
 
@@ -82,7 +81,6 @@ async function main() {
       .insert(schema.doctors)
       .values({
         userId: userDoc2.id,
-        fullName: 'Dr. House',
         licenseNumber: 'DOC-002',
         specialization: 'Nutrition (Dinh dưỡng)',
         hospital: 'Bệnh viện Đại học Y Dược',
@@ -100,8 +98,8 @@ async function main() {
         phoneNumber: patPhone1,
         password: hashedPassword,
         role: 'PATIENT',
+        fullName: 'Nguyen Van A',
         isActive: true,
-        isPhoneVerified: true,
       })
       .returning({ id: schema.users.id });
 
@@ -109,10 +107,9 @@ async function main() {
       .insert(schema.patients)
       .values({
         userId: userPat1.id,
-        fullName: 'Nguyen Van A',
-        gender: 'MALE',
+        gender: 'M',
         dateOfBirth: '1990-01-01',
-        diabetesType: 'TYPE_2',
+        diabetesType: 'T2D',
       })
       .returning({ id: schema.patients.id });
 
@@ -122,8 +119,8 @@ async function main() {
         phoneNumber: patPhone2,
         password: hashedPassword,
         role: 'PATIENT',
+        fullName: 'Tran Thi B',
         isActive: true,
-        isPhoneVerified: true,
       })
       .returning({ id: schema.users.id });
 
@@ -131,8 +128,7 @@ async function main() {
       .insert(schema.patients)
       .values({
         userId: userPat2.id,
-        fullName: 'Tran Thi B',
-        gender: 'FEMALE',
+        gender: 'F',
         dateOfBirth: '1995-05-20',
         diabetesType: 'GDM',
       })
@@ -144,17 +140,16 @@ async function main() {
         phoneNumber: patPhone3,
         password: hashedPassword,
         role: 'PATIENT',
+        fullName: 'Le Van C',
         isActive: true,
-        isPhoneVerified: true,
       })
       .returning({ id: schema.users.id });
 
     await db.insert(schema.patients).values({
       userId: userPat3.id,
-      fullName: 'Le Van C',
-      gender: 'MALE',
+      gender: 'M',
       dateOfBirth: '1985-12-12',
-      diabetesType: 'TYPE_1',
+      diabetesType: 'T1D',
     });
 
     console.log('🔗 Linking Patients to Doctors...');
