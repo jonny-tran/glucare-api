@@ -14,7 +14,10 @@ import { AuthStrategy } from './strategies/auth.strategy';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_ACCESS_SECRET'),
-        signOptions: { expiresIn: '60m' },
+        signOptions: {
+          expiresIn: (configService.get<string>('JWT_ACCESS_EXPIRATION') ??
+            '45m') as unknown as number,
+        },
       }),
     }),
   ],
