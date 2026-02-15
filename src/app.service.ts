@@ -3,6 +3,6 @@ import { Injectable } from '@nestjs/common';
 @Injectable()
 export class AppService {
   getHello(): string {
-    return 'Check APIs GluCare is running good!';
+    return 'Kiểm tra API GluCare hoạt động tốt!';
   }
 }

@@ -1,0 +1,1354 @@
+
+> glucare-api@0.0.1 test:e2e D:\Code\project\glucare-api
+> jest --config ./test/jest-e2e.json
+
+FAIL test/app.e2e-spec.ts (9.233 s)
+  ● AppController (e2e) › / (GET)
+
+    expected 'Hello World!' response body, got 'Kiểm tra API GluCare hoạt động tốt!'
+
+    [0m [90m 21 |[39m       [33m.[39m[36mget[39m([32m'/'[39m)
+     [90m 22 |[39m       [33m.[39mexpect([35m200[39m)
+    [31m[1m>[22m[39m[90m 23 |[39m       [33m.[39mexpect([32m'Hello World!'[39m)[33m;[39m
+     [90m    |[39m        [31m[1m^[22m[39m
+     [90m 24 |[39m   })[33m;[39m
+     [90m 25 |[39m })[33m;[39m
+     [90m 26 |[39m[0m
+
+      at Object.<anonymous> (test/app.e2e-spec.ts:23:8)
+      ----
+      at error (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:392:15)
+      at Test._assertBody (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:263:16)
+      at node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+FAIL test/glucose.e2e-spec.ts (9.314 s)
+  ● GlucoseController (e2e) › /v1/glucose (POST) › should create glucose reading for User A
+
+    expected 201 "Created", got 404 "Not Found"
+
+    [0m [90m 76 |[39m           notes[33m:[39m [32m'Test E2E'[39m[33m,[39m
+     [90m 77 |[39m         })
+    [31m[1m>[22m[39m[90m 78 |[39m         [33m.[39mexpect([35m201[39m)
+     [90m    |[39m          [31m[1m^[22m[39m
+     [90m 79 |[39m         [33m.[39mexpect((res) [33m=>[39m {
+     [90m 80 |[39m           expect(res[33m.[39mbody[33m.[39mdata[33m.[39mglucoseValue)[33m.[39mtoBe([32m'120.00'[39m)[33m;[39m
+     [90m 81 |[39m           expect(res[33m.[39mbody[33m.[39mdata[33m.[39muserId)[33m.[39mtoBe(userA[33m.[39msub)[33m;[39m[0m
+
+      at Object.<anonymous> (test/glucose.e2e-spec.ts:78:10)
+      ----
+      at Test._assertStatus (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+  ● GlucoseController (e2e) › /v1/glucose (POST) › should fail with 400 for invalid range (700)
+
+    expected 400 "Bad Request", got 404 "Not Found"
+
+    [0m [90m  96 |[39m           recordedAt[33m:[39m [36mnew[39m [33mDate[39m()[33m.[39mtoISOString()[33m,[39m
+     [90m  97 |[39m         })
+    [31m[1m>[22m[39m[90m  98 |[39m         [33m.[39mexpect([35m400[39m)[33m;[39m
+     [90m     |[39m          [31m[1m^[22m[39m
+     [90m  99 |[39m       [90m// Expect localized message if possible, or at least Bad Request[39m
+     [90m 100 |[39m     })[33m;[39m
+     [90m 101 |[39m   })[33m;[39m[0m
+
+      at Object.<anonymous> (test/glucose.e2e-spec.ts:98:10)
+      ----
+      at Test._assertStatus (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+  ● GlucoseController (e2e) › Data Isolation › User B should not see User A dashboard data
+
+    expected 200 "OK", got 404 "Not Found"
+
+    [0m [90m 108 |[39m         [33m.[39m[36mget[39m([32m'/v1/glucose/dashboard'[39m)
+     [90m 109 |[39m         [33m.[39m[36mset[39m([32m'x-user-id'[39m[33m,[39m [32m'userB'[39m)
+    [31m[1m>[22m[39m[90m 110 |[39m         [33m.[39mexpect([35m200[39m)
+     [90m     |[39m          [31m[1m^[22m[39m
+     [90m 111 |[39m         [33m.[39mexpect((res) [33m=>[39m {
+     [90m 112 |[39m           [90m// latestReading should be null for User B[39m
+     [90m 113 |[39m           expect(res[33m.[39mbody[33m.[39mdata[33m.[39mlatestReading)[33m.[39mtoBeNull()[33m;[39m[0m
+
+      at Object.<anonymous> (test/glucose.e2e-spec.ts:110:10)
+      ----
+      at Test._assertStatus (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+  ● GlucoseController (e2e) › Data Isolation › User A should see dashboard data
+
+    expected 200 "OK", got 404 "Not Found"
+
+    [0m [90m 119 |[39m         [33m.[39m[36mget[39m([32m'/v1/glucose/dashboard'[39m)
+     [90m 120 |[39m         [33m.[39m[36mset[39m([32m'x-user-id'[39m[33m,[39m [32m'userA'[39m)
+    [31m[1m>[22m[39m[90m 121 |[39m         [33m.[39mexpect([35m200[39m)
+     [90m     |[39m          [31m[1m^[22m[39m
+     [90m 122 |[39m         [33m.[39mexpect((res) [33m=>[39m {
+     [90m 123 |[39m           [90m// latestReading should NOT be null[39m
+     [90m 124 |[39m           expect(res[33m.[39mbody[33m.[39mdata[33m.[39mlatestReading)[33m.[39mnot[33m.[39mtoBeNull()[33m;[39m[0m
+
+      at Object.<anonymous> (test/glucose.e2e-spec.ts:121:10)
+      ----
+      at Test._assertStatus (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+[31m[Nest] 21708  - [39m23:07:29 15/02/2026 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39mDrizzleQueryError: Failed query: insert into "meals" ("id", "user_id", "food_name", "meal_type", "calories", "carbs", "recorded_at", "notes", "deleted_at", "created_at") values (default, $1, $2, $3, $4, $5, $6, $7, default, default) returning "id", "user_id", "food_name", "meal_type", "calories", "carbs", "recorded_at", "notes", "deleted_at", "created_at"
+params: 00000000-0000-0000-0000-000000000001,Bún bò,BREAKFAST,500,50,2026-02-15T16:07:29.255Z,Ngon
+    at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:73:11[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+[90m    ... 2 lines matching cause stack trace ...[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+  query: [32m'insert into "meals" ("id", "user_id", "food_name", "meal_type", "calories", "carbs", "recorded_at", "notes", "deleted_at", "created_at") values (default, $1, $2, $3, $4, $5, $6, $7, default, default) returning "id", "user_id", "food_name", "meal_type", "calories", "carbs", "recorded_at", "notes", "deleted_at", "created_at"'[39m,
+  params: [
+    [32m'00000000-0000-0000-0000-000000000001'[39m,
+    [32m'Bún bò'[39m,
+    [32m'BREAKFAST'[39m,
+    [32m'500'[39m,
+    [32m'50'[39m,
+    [32m'2026-02-15T16:07:29.255Z'[39m,
+    [32m'Ngon'[39m
+  ],
+  cause: error: column "user_id" of relation "meals" does not exist
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\pg-pool@3.10.1_pg@8.16.3\node_modules\[4mpg-pool[24m\index.js:45:11
+  [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:161:13
+      at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:71:12[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+      at MealsRepository.create [90m(D:\Code\project\glucare-api\[39msrc\modules\meals\meals.repository.ts:18:20[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-execution-context.js:46:28
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+    length: [33m125[39m,
+    severity: [32m'ERROR'[39m,
+    code: [32m'42703'[39m,
+    detail: [90mundefined[39m,
+    hint: [90mundefined[39m,
+    position: [32m'28'[39m,
+    internalPosition: [90mundefined[39m,
+    internalQuery: [90mundefined[39m,
+    where: [90mundefined[39m,
+    schema: [90mundefined[39m,
+    table: [90mundefined[39m,
+    column: [90mundefined[39m,
+    dataType: [90mundefined[39m,
+    constraint: [90mundefined[39m,
+    file: [32m'parse_target.c'[39m,
+    line: [32m'1065'[39m,
+    routine: [32m'checkInsertTargets'[39m
+  }
+}
+[31m[Nest] 13228  - [39m23:07:29 15/02/2026 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39mDrizzleQueryError: Failed query: insert into "medications" ("id", "user_id", "medicine_name", "dosage", "unit", "recorded_at", "notes", "deleted_at", "created_at") values (default, $1, $2, $3, $4, $5, $6, default, default) returning "id", "user_id", "medicine_name", "dosage", "unit", "recorded_at", "notes", "deleted_at", "created_at"
+params: 00000000-0000-0000-0000-000000000003,Insulin,10,units,2026-02-15T16:07:29.265Z,Trước ăn
+    at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:73:11[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+[90m    ... 2 lines matching cause stack trace ...[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+  query: [32m'insert into "medications" ("id", "user_id", "medicine_name", "dosage", "unit", "recorded_at", "notes", "deleted_at", "created_at") values (default, $1, $2, $3, $4, $5, $6, default, default) returning "id", "user_id", "medicine_name", "dosage", "unit", "recorded_at", "notes", "deleted_at", "created_at"'[39m,
+  params: [
+    [32m'00000000-0000-0000-0000-000000000003'[39m,
+    [32m'Insulin'[39m,
+    [32m'10'[39m,
+    [32m'units'[39m,
+    [32m'2026-02-15T16:07:29.265Z'[39m,
+    [32m'Trước ăn'[39m
+  ],
+  cause: error: column "user_id" of relation "medications" does not exist
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\pg-pool@3.10.1_pg@8.16.3\node_modules\[4mpg-pool[24m\index.js:45:11
+  [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:161:13
+      at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:71:12[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+      at MedicationsRepository.create [90m(D:\Code\project\glucare-api\[39msrc\modules\medications\medications.repository.ts:21:26[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-execution-context.js:46:28
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+    length: [33m131[39m,
+    severity: [32m'ERROR'[39m,
+    code: [32m'42703'[39m,
+    detail: [90mundefined[39m,
+    hint: [90mundefined[39m,
+    position: [32m'34'[39m,
+    internalPosition: [90mundefined[39m,
+    internalQuery: [90mundefined[39m,
+    where: [90mundefined[39m,
+    schema: [90mundefined[39m,
+    table: [90mundefined[39m,
+    column: [90mundefined[39m,
+    dataType: [90mundefined[39m,
+    constraint: [90mundefined[39m,
+    file: [32m'parse_target.c'[39m,
+    line: [32m'1065'[39m,
+    routine: [32m'checkInsertTargets'[39m
+  }
+}
+[31m[Nest] 21708  - [39m23:07:29 15/02/2026 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39mDrizzleQueryError: Failed query: select count(*) from "meals" where ("meals"."user_id" = $1 and "meals"."deleted_at" is null)
+params: 00000000-0000-0000-0000-000000000001
+    at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:73:11[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+[90m    ... 2 lines matching cause stack trace ...[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+  query: [32m'select count(*) from "meals" where ("meals"."user_id" = $1 and "meals"."deleted_at" is null)'[39m,
+  params: [
+    [32m'00000000-0000-0000-0000-000000000001'[39m
+  ],
+  cause: error: column meals.user_id does not exist
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\pg-pool@3.10.1_pg@8.16.3\node_modules\[4mpg-pool[24m\index.js:45:11
+  [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:161:13
+      at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:71:12[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+      at MealsRepository.findAll [90m(D:\Code\project\glucare-api\[39msrc\modules\meals\meals.repository.ts:97:27[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-execution-context.js:46:28
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+    length: [33m111[39m,
+    severity: [32m'ERROR'[39m,
+    code: [32m'42703'[39m,
+    detail: [90mundefined[39m,
+    hint: [90mundefined[39m,
+    position: [32m'37'[39m,
+    internalPosition: [90mundefined[39m,
+    internalQuery: [90mundefined[39m,
+    where: [90mundefined[39m,
+    schema: [90mundefined[39m,
+    table: [90mundefined[39m,
+    column: [90mundefined[39m,
+    dataType: [90mundefined[39m,
+    constraint: [90mundefined[39m,
+    file: [32m'parse_relation.c'[39m,
+    line: [32m'3716'[39m,
+    routine: [32m'errorMissingColumn'[39m
+  }
+}
+[31m[Nest] 13228  - [39m23:07:30 15/02/2026 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39mDrizzleQueryError: Failed query: select count(*) from "medications" where ("medications"."user_id" = $1 and "medications"."deleted_at" is null)
+params: 00000000-0000-0000-0000-000000000003
+    at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:73:11[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+[90m    ... 2 lines matching cause stack trace ...[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+  query: [32m'select count(*) from "medications" where ("medications"."user_id" = $1 and "medications"."deleted_at" is null)'[39m,
+  params: [
+    [32m'00000000-0000-0000-0000-000000000003'[39m
+  ],
+  cause: error: column medications.user_id does not exist
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\pg-pool@3.10.1_pg@8.16.3\node_modules\[4mpg-pool[24m\index.js:45:11
+  [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:161:13
+      at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:71:12[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+      at MedicationsRepository.findAll [90m(D:\Code\project\glucare-api\[39msrc\modules\medications\medications.repository.ts:104:27[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-execution-context.js:46:28
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+    length: [33m117[39m,
+    severity: [32m'ERROR'[39m,
+    code: [32m'42703'[39m,
+    detail: [90mundefined[39m,
+    hint: [90mundefined[39m,
+    position: [32m'43'[39m,
+    internalPosition: [90mundefined[39m,
+    internalQuery: [90mundefined[39m,
+    where: [90mundefined[39m,
+    schema: [90mundefined[39m,
+    table: [90mundefined[39m,
+    column: [90mundefined[39m,
+    dataType: [90mundefined[39m,
+    constraint: [90mundefined[39m,
+    file: [32m'parse_relation.c'[39m,
+    line: [32m'3716'[39m,
+    routine: [32m'errorMissingColumn'[39m
+  }
+}
+[31m[Nest] 21708  - [39m23:07:30 15/02/2026 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39mDrizzleQueryError: Failed query: select count(*) from "meals" where ("meals"."user_id" = $1 and "meals"."deleted_at" is null)
+params: 00000000-0000-0000-0000-000000000002
+    at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:73:11[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+[90m    ... 2 lines matching cause stack trace ...[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+  query: [32m'select count(*) from "meals" where ("meals"."user_id" = $1 and "meals"."deleted_at" is null)'[39m,
+  params: [
+    [32m'00000000-0000-0000-0000-000000000002'[39m
+  ],
+  cause: error: column meals.user_id does not exist
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\pg-pool@3.10.1_pg@8.16.3\node_modules\[4mpg-pool[24m\index.js:45:11
+  [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:161:13
+      at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:71:12[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+      at MealsRepository.findAll [90m(D:\Code\project\glucare-api\[39msrc\modules\meals\meals.repository.ts:97:27[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-execution-context.js:46:28
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+    length: [33m111[39m,
+    severity: [32m'ERROR'[39m,
+    code: [32m'42703'[39m,
+    detail: [90mundefined[39m,
+    hint: [90mundefined[39m,
+    position: [32m'37'[39m,
+    internalPosition: [90mundefined[39m,
+    internalQuery: [90mundefined[39m,
+    where: [90mundefined[39m,
+    schema: [90mundefined[39m,
+    table: [90mundefined[39m,
+    column: [90mundefined[39m,
+    dataType: [90mundefined[39m,
+    constraint: [90mundefined[39m,
+    file: [32m'parse_relation.c'[39m,
+    line: [32m'3716'[39m,
+    routine: [32m'errorMissingColumn'[39m
+  }
+}
+[31m[Nest] 13228  - [39m23:07:30 15/02/2026 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39mDrizzleQueryError: Failed query: select count(*) from "medications" where ("medications"."user_id" = $1 and "medications"."deleted_at" is null)
+params: 00000000-0000-0000-0000-000000000004
+    at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:73:11[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+[90m    ... 2 lines matching cause stack trace ...[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+  query: [32m'select count(*) from "medications" where ("medications"."user_id" = $1 and "medications"."deleted_at" is null)'[39m,
+  params: [
+    [32m'00000000-0000-0000-0000-000000000004'[39m
+  ],
+  cause: error: column medications.user_id does not exist
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\pg-pool@3.10.1_pg@8.16.3\node_modules\[4mpg-pool[24m\index.js:45:11
+  [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:161:13
+      at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:71:12[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+      at MedicationsRepository.findAll [90m(D:\Code\project\glucare-api\[39msrc\modules\medications\medications.repository.ts:104:27[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-execution-context.js:46:28
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+    length: [33m117[39m,
+    severity: [32m'ERROR'[39m,
+    code: [32m'42703'[39m,
+    detail: [90mundefined[39m,
+    hint: [90mundefined[39m,
+    position: [32m'43'[39m,
+    internalPosition: [90mundefined[39m,
+    internalQuery: [90mundefined[39m,
+    where: [90mundefined[39m,
+    schema: [90mundefined[39m,
+    table: [90mundefined[39m,
+    column: [90mundefined[39m,
+    dataType: [90mundefined[39m,
+    constraint: [90mundefined[39m,
+    file: [32m'parse_relation.c'[39m,
+    line: [32m'3716'[39m,
+    routine: [32m'errorMissingColumn'[39m
+  }
+}
+[31m[Nest] 21708  - [39m23:07:31 15/02/2026 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39mDrizzleQueryError: Failed query: select "id", "user_id", "food_name", "meal_type", "calories", "carbs", "recorded_at", "notes", "deleted_at", "created_at" from "meals" "meals" where ("meals"."id" = $1 and "meals"."deleted_at" is null) limit $2
+params: undefined,1
+    at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:73:11[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+[90m    ... 2 lines matching cause stack trace ...[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+  query: [32m'select "id", "user_id", "food_name", "meal_type", "calories", "carbs", "recorded_at", "notes", "deleted_at", "created_at" from "meals" "meals" where ("meals"."id" = $1 and "meals"."deleted_at" is null) limit $2'[39m,
+  params: [
+    [32m'undefined'[39m,
+    [33m1[39m
+  ],
+  cause: error: column "user_id" does not exist
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\pg-pool@3.10.1_pg@8.16.3\node_modules\[4mpg-pool[24m\index.js:45:11
+  [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:161:13
+      at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:71:12[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+      at MealsService.findOne [90m(D:\Code\project\glucare-api\[39msrc\modules\meals\meals.service.ts:23:18[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-execution-context.js:46:28
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+    length: [33m107[39m,
+    severity: [32m'ERROR'[39m,
+    code: [32m'42703'[39m,
+    detail: [90mundefined[39m,
+    hint: [90mundefined[39m,
+    position: [32m'14'[39m,
+    internalPosition: [90mundefined[39m,
+    internalQuery: [90mundefined[39m,
+    where: [90mundefined[39m,
+    schema: [90mundefined[39m,
+    table: [90mundefined[39m,
+    column: [90mundefined[39m,
+    dataType: [90mundefined[39m,
+    constraint: [90mundefined[39m,
+    file: [32m'parse_relation.c'[39m,
+    line: [32m'3716'[39m,
+    routine: [32m'errorMissingColumn'[39m
+  }
+}
+[31m[Nest] 13228  - [39m23:07:31 15/02/2026 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39mDrizzleQueryError: Failed query: select "id", "user_id", "medicine_name", "dosage", "unit", "recorded_at", "notes", "deleted_at", "created_at" from "medications" "medications" where ("medications"."id" = $1 and "medications"."deleted_at" is null) limit $2
+params: undefined,1
+    at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:73:11[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+[90m    ... 2 lines matching cause stack trace ...[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+  query: [32m'select "id", "user_id", "medicine_name", "dosage", "unit", "recorded_at", "notes", "deleted_at", "created_at" from "medications" "medications" where ("medications"."id" = $1 and "medications"."deleted_at" is null) limit $2'[39m,
+  params: [
+    [32m'undefined'[39m,
+    [33m1[39m
+  ],
+  cause: error: column "user_id" does not exist
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\pg-pool@3.10.1_pg@8.16.3\node_modules\[4mpg-pool[24m\index.js:45:11
+  [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:161:13
+      at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:71:12[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+      at MedicationsService.findOne [90m(D:\Code\project\glucare-api\[39msrc\modules\medications\medications.service.ts:26:24[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-execution-context.js:46:28
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+    length: [33m107[39m,
+    severity: [32m'ERROR'[39m,
+    code: [32m'42703'[39m,
+    detail: [90mundefined[39m,
+    hint: [90mundefined[39m,
+    position: [32m'14'[39m,
+    internalPosition: [90mundefined[39m,
+    internalQuery: [90mundefined[39m,
+    where: [90mundefined[39m,
+    schema: [90mundefined[39m,
+    table: [90mundefined[39m,
+    column: [90mundefined[39m,
+    dataType: [90mundefined[39m,
+    constraint: [90mundefined[39m,
+    file: [32m'parse_relation.c'[39m,
+    line: [32m'3716'[39m,
+    routine: [32m'errorMissingColumn'[39m
+  }
+}
+[31m[Nest] 21708  - [39m23:07:31 15/02/2026 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39mDrizzleQueryError: Failed query: select "id", "user_id", "food_name", "meal_type", "calories", "carbs", "recorded_at", "notes", "deleted_at", "created_at" from "meals" "meals" where ("meals"."id" = $1 and "meals"."deleted_at" is null) limit $2
+params: undefined,1
+    at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:73:11[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+[90m    ... 2 lines matching cause stack trace ...[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+  query: [32m'select "id", "user_id", "food_name", "meal_type", "calories", "carbs", "recorded_at", "notes", "deleted_at", "created_at" from "meals" "meals" where ("meals"."id" = $1 and "meals"."deleted_at" is null) limit $2'[39m,
+  params: [
+    [32m'undefined'[39m,
+    [33m1[39m
+  ],
+  cause: error: column "user_id" does not exist
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\pg-pool@3.10.1_pg@8.16.3\node_modules\[4mpg-pool[24m\index.js:45:11
+  [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:161:13
+      at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:71:12[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+      at MealsService.findOne [90m(D:\Code\project\glucare-api\[39msrc\modules\meals\meals.service.ts:23:18[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-execution-context.js:46:28
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+    length: [33m107[39m,
+    severity: [32m'ERROR'[39m,
+    code: [32m'42703'[39m,
+    detail: [90mundefined[39m,
+    hint: [90mundefined[39m,
+    position: [32m'14'[39m,
+    internalPosition: [90mundefined[39m,
+    internalQuery: [90mundefined[39m,
+    where: [90mundefined[39m,
+    schema: [90mundefined[39m,
+    table: [90mundefined[39m,
+    column: [90mundefined[39m,
+    dataType: [90mundefined[39m,
+    constraint: [90mundefined[39m,
+    file: [32m'parse_relation.c'[39m,
+    line: [32m'3716'[39m,
+    routine: [32m'errorMissingColumn'[39m
+  }
+}
+[31m[Nest] 13228  - [39m23:07:31 15/02/2026 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39mDrizzleQueryError: Failed query: select "id", "user_id", "medicine_name", "dosage", "unit", "recorded_at", "notes", "deleted_at", "created_at" from "medications" "medications" where ("medications"."id" = $1 and "medications"."deleted_at" is null) limit $2
+params: undefined,1
+    at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:73:11[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+[90m    ... 2 lines matching cause stack trace ...[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+  query: [32m'select "id", "user_id", "medicine_name", "dosage", "unit", "recorded_at", "notes", "deleted_at", "created_at" from "medications" "medications" where ("medications"."id" = $1 and "medications"."deleted_at" is null) limit $2'[39m,
+  params: [
+    [32m'undefined'[39m,
+    [33m1[39m
+  ],
+  cause: error: column "user_id" does not exist
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\pg-pool@3.10.1_pg@8.16.3\node_modules\[4mpg-pool[24m\index.js:45:11
+  [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:161:13
+      at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:71:12[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+      at MedicationsService.findOne [90m(D:\Code\project\glucare-api\[39msrc\modules\medications\medications.service.ts:26:24[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-execution-context.js:46:28
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+    length: [33m107[39m,
+    severity: [32m'ERROR'[39m,
+    code: [32m'42703'[39m,
+    detail: [90mundefined[39m,
+    hint: [90mundefined[39m,
+    position: [32m'14'[39m,
+    internalPosition: [90mundefined[39m,
+    internalQuery: [90mundefined[39m,
+    where: [90mundefined[39m,
+    schema: [90mundefined[39m,
+    table: [90mundefined[39m,
+    column: [90mundefined[39m,
+    dataType: [90mundefined[39m,
+    constraint: [90mundefined[39m,
+    file: [32m'parse_relation.c'[39m,
+    line: [32m'3716'[39m,
+    routine: [32m'errorMissingColumn'[39m
+  }
+}
+[31m[Nest] 21708  - [39m23:07:31 15/02/2026 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39mDrizzleQueryError: Failed query: select "id", "user_id", "food_name", "meal_type", "calories", "carbs", "recorded_at", "notes", "deleted_at", "created_at" from "meals" "meals" where ("meals"."id" = $1 and "meals"."deleted_at" is null) limit $2
+params: undefined,1
+    at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:73:11[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+[90m    ... 3 lines matching cause stack trace ...[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+  query: [32m'select "id", "user_id", "food_name", "meal_type", "calories", "carbs", "recorded_at", "notes", "deleted_at", "created_at" from "meals" "meals" where ("meals"."id" = $1 and "meals"."deleted_at" is null) limit $2'[39m,
+  params: [
+    [32m'undefined'[39m,
+    [33m1[39m
+  ],
+  cause: error: column "user_id" does not exist
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\pg-pool@3.10.1_pg@8.16.3\node_modules\[4mpg-pool[24m\index.js:45:11
+  [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:161:13
+      at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:71:12[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+      at MealsService.findOne [90m(D:\Code\project\glucare-api\[39msrc\modules\meals\meals.service.ts:23:18[90m)[39m
+      at MealsService.update [90m(D:\Code\project\glucare-api\[39msrc\modules\meals\meals.service.ts:31:5[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-execution-context.js:46:28
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+    length: [33m107[39m,
+    severity: [32m'ERROR'[39m,
+    code: [32m'42703'[39m,
+    detail: [90mundefined[39m,
+    hint: [90mundefined[39m,
+    position: [32m'14'[39m,
+    internalPosition: [90mundefined[39m,
+    internalQuery: [90mundefined[39m,
+    where: [90mundefined[39m,
+    schema: [90mundefined[39m,
+    table: [90mundefined[39m,
+    column: [90mundefined[39m,
+    dataType: [90mundefined[39m,
+    constraint: [90mundefined[39m,
+    file: [32m'parse_relation.c'[39m,
+    line: [32m'3716'[39m,
+    routine: [32m'errorMissingColumn'[39m
+  }
+}
+[31m[Nest] 13228  - [39m23:07:31 15/02/2026 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39mDrizzleQueryError: Failed query: select "id", "user_id", "medicine_name", "dosage", "unit", "recorded_at", "notes", "deleted_at", "created_at" from "medications" "medications" where ("medications"."id" = $1 and "medications"."deleted_at" is null) limit $2
+params: undefined,1
+    at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:73:11[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+[90m    ... 3 lines matching cause stack trace ...[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+  query: [32m'select "id", "user_id", "medicine_name", "dosage", "unit", "recorded_at", "notes", "deleted_at", "created_at" from "medications" "medications" where ("medications"."id" = $1 and "medications"."deleted_at" is null) limit $2'[39m,
+  params: [
+    [32m'undefined'[39m,
+    [33m1[39m
+  ],
+  cause: error: column "user_id" does not exist
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\pg-pool@3.10.1_pg@8.16.3\node_modules\[4mpg-pool[24m\index.js:45:11
+  [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:161:13
+      at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:71:12[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+      at MedicationsService.findOne [90m(D:\Code\project\glucare-api\[39msrc\modules\medications\medications.service.ts:26:24[90m)[39m
+      at MedicationsService.update [90m(D:\Code\project\glucare-api\[39msrc\modules\medications\medications.service.ts:35:5[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-execution-context.js:46:28
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+    length: [33m107[39m,
+    severity: [32m'ERROR'[39m,
+    code: [32m'42703'[39m,
+    detail: [90mundefined[39m,
+    hint: [90mundefined[39m,
+    position: [32m'14'[39m,
+    internalPosition: [90mundefined[39m,
+    internalQuery: [90mundefined[39m,
+    where: [90mundefined[39m,
+    schema: [90mundefined[39m,
+    table: [90mundefined[39m,
+    column: [90mundefined[39m,
+    dataType: [90mundefined[39m,
+    constraint: [90mundefined[39m,
+    file: [32m'parse_relation.c'[39m,
+    line: [32m'3716'[39m,
+    routine: [32m'errorMissingColumn'[39m
+  }
+}
+[31m[Nest] 21708  - [39m23:07:32 15/02/2026 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39mDrizzleQueryError: Failed query: select "id", "user_id", "food_name", "meal_type", "calories", "carbs", "recorded_at", "notes", "deleted_at", "created_at" from "meals" "meals" where ("meals"."id" = $1 and "meals"."deleted_at" is null) limit $2
+params: undefined,1
+    at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:73:11[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+[90m    ... 3 lines matching cause stack trace ...[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+  query: [32m'select "id", "user_id", "food_name", "meal_type", "calories", "carbs", "recorded_at", "notes", "deleted_at", "created_at" from "meals" "meals" where ("meals"."id" = $1 and "meals"."deleted_at" is null) limit $2'[39m,
+  params: [
+    [32m'undefined'[39m,
+    [33m1[39m
+  ],
+  cause: error: column "user_id" does not exist
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\pg-pool@3.10.1_pg@8.16.3\node_modules\[4mpg-pool[24m\index.js:45:11
+  [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:161:13
+      at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:71:12[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+      at MealsService.findOne [90m(D:\Code\project\glucare-api\[39msrc\modules\meals\meals.service.ts:23:18[90m)[39m
+      at MealsService.update [90m(D:\Code\project\glucare-api\[39msrc\modules\meals\meals.service.ts:31:5[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-execution-context.js:46:28
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+    length: [33m107[39m,
+    severity: [32m'ERROR'[39m,
+    code: [32m'42703'[39m,
+    detail: [90mundefined[39m,
+    hint: [90mundefined[39m,
+    position: [32m'14'[39m,
+    internalPosition: [90mundefined[39m,
+    internalQuery: [90mundefined[39m,
+    where: [90mundefined[39m,
+    schema: [90mundefined[39m,
+    table: [90mundefined[39m,
+    column: [90mundefined[39m,
+    dataType: [90mundefined[39m,
+    constraint: [90mundefined[39m,
+    file: [32m'parse_relation.c'[39m,
+    line: [32m'3716'[39m,
+    routine: [32m'errorMissingColumn'[39m
+  }
+}
+[31m[Nest] 13228  - [39m23:07:32 15/02/2026 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39mDrizzleQueryError: Failed query: select "id", "user_id", "medicine_name", "dosage", "unit", "recorded_at", "notes", "deleted_at", "created_at" from "medications" "medications" where ("medications"."id" = $1 and "medications"."deleted_at" is null) limit $2
+params: undefined,1
+    at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:73:11[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+[90m    ... 3 lines matching cause stack trace ...[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+  query: [32m'select "id", "user_id", "medicine_name", "dosage", "unit", "recorded_at", "notes", "deleted_at", "created_at" from "medications" "medications" where ("medications"."id" = $1 and "medications"."deleted_at" is null) limit $2'[39m,
+  params: [
+    [32m'undefined'[39m,
+    [33m1[39m
+  ],
+  cause: error: column "user_id" does not exist
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\pg-pool@3.10.1_pg@8.16.3\node_modules\[4mpg-pool[24m\index.js:45:11
+  [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:161:13
+      at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:71:12[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+      at MedicationsService.findOne [90m(D:\Code\project\glucare-api\[39msrc\modules\medications\medications.service.ts:26:24[90m)[39m
+      at MedicationsService.update [90m(D:\Code\project\glucare-api\[39msrc\modules\medications\medications.service.ts:35:5[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-execution-context.js:46:28
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+    length: [33m107[39m,
+    severity: [32m'ERROR'[39m,
+    code: [32m'42703'[39m,
+    detail: [90mundefined[39m,
+    hint: [90mundefined[39m,
+    position: [32m'14'[39m,
+    internalPosition: [90mundefined[39m,
+    internalQuery: [90mundefined[39m,
+    where: [90mundefined[39m,
+    schema: [90mundefined[39m,
+    table: [90mundefined[39m,
+    column: [90mundefined[39m,
+    dataType: [90mundefined[39m,
+    constraint: [90mundefined[39m,
+    file: [32m'parse_relation.c'[39m,
+    line: [32m'3716'[39m,
+    routine: [32m'errorMissingColumn'[39m
+  }
+}
+[31m[Nest] 21708  - [39m23:07:32 15/02/2026 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39mDrizzleQueryError: Failed query: select "id", "user_id", "food_name", "meal_type", "calories", "carbs", "recorded_at", "notes", "deleted_at", "created_at" from "meals" "meals" where ("meals"."id" = $1 and "meals"."deleted_at" is null) limit $2
+params: undefined,1
+    at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:73:11[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+[90m    ... 3 lines matching cause stack trace ...[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+  query: [32m'select "id", "user_id", "food_name", "meal_type", "calories", "carbs", "recorded_at", "notes", "deleted_at", "created_at" from "meals" "meals" where ("meals"."id" = $1 and "meals"."deleted_at" is null) limit $2'[39m,
+  params: [
+    [32m'undefined'[39m,
+    [33m1[39m
+  ],
+  cause: error: column "user_id" does not exist
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\pg-pool@3.10.1_pg@8.16.3\node_modules\[4mpg-pool[24m\index.js:45:11
+  [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:161:13
+      at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:71:12[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+      at MealsService.findOne [90m(D:\Code\project\glucare-api\[39msrc\modules\meals\meals.service.ts:23:18[90m)[39m
+      at MealsService.remove [90m(D:\Code\project\glucare-api\[39msrc\modules\meals\meals.service.ts:36:5[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-execution-context.js:46:28
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+    length: [33m107[39m,
+    severity: [32m'ERROR'[39m,
+    code: [32m'42703'[39m,
+    detail: [90mundefined[39m,
+    hint: [90mundefined[39m,
+    position: [32m'14'[39m,
+    internalPosition: [90mundefined[39m,
+    internalQuery: [90mundefined[39m,
+    where: [90mundefined[39m,
+    schema: [90mundefined[39m,
+    table: [90mundefined[39m,
+    column: [90mundefined[39m,
+    dataType: [90mundefined[39m,
+    constraint: [90mundefined[39m,
+    file: [32m'parse_relation.c'[39m,
+    line: [32m'3716'[39m,
+    routine: [32m'errorMissingColumn'[39m
+  }
+}
+[31m[Nest] 13228  - [39m23:07:32 15/02/2026 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39mDrizzleQueryError: Failed query: select "id", "user_id", "medicine_name", "dosage", "unit", "recorded_at", "notes", "deleted_at", "created_at" from "medications" "medications" where ("medications"."id" = $1 and "medications"."deleted_at" is null) limit $2
+params: undefined,1
+    at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:73:11[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+[90m    ... 3 lines matching cause stack trace ...[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+  query: [32m'select "id", "user_id", "medicine_name", "dosage", "unit", "recorded_at", "notes", "deleted_at", "created_at" from "medications" "medications" where ("medications"."id" = $1 and "medications"."deleted_at" is null) limit $2'[39m,
+  params: [
+    [32m'undefined'[39m,
+    [33m1[39m
+  ],
+  cause: error: column "user_id" does not exist
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\pg-pool@3.10.1_pg@8.16.3\node_modules\[4mpg-pool[24m\index.js:45:11
+  [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:161:13
+      at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:71:12[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+      at MedicationsService.findOne [90m(D:\Code\project\glucare-api\[39msrc\modules\medications\medications.service.ts:26:24[90m)[39m
+      at MedicationsService.remove [90m(D:\Code\project\glucare-api\[39msrc\modules\medications\medications.service.ts:40:5[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-execution-context.js:46:28
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+    length: [33m107[39m,
+    severity: [32m'ERROR'[39m,
+    code: [32m'42703'[39m,
+    detail: [90mundefined[39m,
+    hint: [90mundefined[39m,
+    position: [32m'14'[39m,
+    internalPosition: [90mundefined[39m,
+    internalQuery: [90mundefined[39m,
+    where: [90mundefined[39m,
+    schema: [90mundefined[39m,
+    table: [90mundefined[39m,
+    column: [90mundefined[39m,
+    dataType: [90mundefined[39m,
+    constraint: [90mundefined[39m,
+    file: [32m'parse_relation.c'[39m,
+    line: [32m'3716'[39m,
+    routine: [32m'errorMissingColumn'[39m
+  }
+}
+[31m[Nest] 21708  - [39m23:07:33 15/02/2026 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39mDrizzleQueryError: Failed query: select "id", "user_id", "food_name", "meal_type", "calories", "carbs", "recorded_at", "notes", "deleted_at", "created_at" from "meals" "meals" where ("meals"."id" = $1 and "meals"."deleted_at" is null) limit $2
+params: undefined,1
+    at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:73:11[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+[90m    ... 3 lines matching cause stack trace ...[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+  query: [32m'select "id", "user_id", "food_name", "meal_type", "calories", "carbs", "recorded_at", "notes", "deleted_at", "created_at" from "meals" "meals" where ("meals"."id" = $1 and "meals"."deleted_at" is null) limit $2'[39m,
+  params: [
+    [32m'undefined'[39m,
+    [33m1[39m
+  ],
+  cause: error: column "user_id" does not exist
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\pg-pool@3.10.1_pg@8.16.3\node_modules\[4mpg-pool[24m\index.js:45:11
+  [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:161:13
+      at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:71:12[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+      at MealsService.findOne [90m(D:\Code\project\glucare-api\[39msrc\modules\meals\meals.service.ts:23:18[90m)[39m
+      at MealsService.remove [90m(D:\Code\project\glucare-api\[39msrc\modules\meals\meals.service.ts:36:5[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-execution-context.js:46:28
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+    length: [33m107[39m,
+    severity: [32m'ERROR'[39m,
+    code: [32m'42703'[39m,
+    detail: [90mundefined[39m,
+    hint: [90mundefined[39m,
+    position: [32m'14'[39m,
+    internalPosition: [90mundefined[39m,
+    internalQuery: [90mundefined[39m,
+    where: [90mundefined[39m,
+    schema: [90mundefined[39m,
+    table: [90mundefined[39m,
+    column: [90mundefined[39m,
+    dataType: [90mundefined[39m,
+    constraint: [90mundefined[39m,
+    file: [32m'parse_relation.c'[39m,
+    line: [32m'3716'[39m,
+    routine: [32m'errorMissingColumn'[39m
+  }
+}
+[31m[Nest] 13228  - [39m23:07:33 15/02/2026 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39mDrizzleQueryError: Failed query: select "id", "user_id", "medicine_name", "dosage", "unit", "recorded_at", "notes", "deleted_at", "created_at" from "medications" "medications" where ("medications"."id" = $1 and "medications"."deleted_at" is null) limit $2
+params: undefined,1
+    at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:73:11[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+[90m    ... 3 lines matching cause stack trace ...[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+  query: [32m'select "id", "user_id", "medicine_name", "dosage", "unit", "recorded_at", "notes", "deleted_at", "created_at" from "medications" "medications" where ("medications"."id" = $1 and "medications"."deleted_at" is null) limit $2'[39m,
+  params: [
+    [32m'undefined'[39m,
+    [33m1[39m
+  ],
+  cause: error: column "user_id" does not exist
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\pg-pool@3.10.1_pg@8.16.3\node_modules\[4mpg-pool[24m\index.js:45:11
+  [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:161:13
+      at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:71:12[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+      at MedicationsService.findOne [90m(D:\Code\project\glucare-api\[39msrc\modules\medications\medications.service.ts:26:24[90m)[39m
+      at MedicationsService.remove [90m(D:\Code\project\glucare-api\[39msrc\modules\medications\medications.service.ts:40:5[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-execution-context.js:46:28
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+    length: [33m107[39m,
+    severity: [32m'ERROR'[39m,
+    code: [32m'42703'[39m,
+    detail: [90mundefined[39m,
+    hint: [90mundefined[39m,
+    position: [32m'14'[39m,
+    internalPosition: [90mundefined[39m,
+    internalQuery: [90mundefined[39m,
+    where: [90mundefined[39m,
+    schema: [90mundefined[39m,
+    table: [90mundefined[39m,
+    column: [90mundefined[39m,
+    dataType: [90mundefined[39m,
+    constraint: [90mundefined[39m,
+    file: [32m'parse_relation.c'[39m,
+    line: [32m'3716'[39m,
+    routine: [32m'errorMissingColumn'[39m
+  }
+}
+[31m[Nest] 21708  - [39m23:07:33 15/02/2026 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39mDrizzleQueryError: Failed query: select "id", "user_id", "food_name", "meal_type", "calories", "carbs", "recorded_at", "notes", "deleted_at", "created_at" from "meals" "meals" where ("meals"."id" = $1 and "meals"."deleted_at" is null) limit $2
+params: undefined,1
+    at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:73:11[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+[90m    ... 2 lines matching cause stack trace ...[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+  query: [32m'select "id", "user_id", "food_name", "meal_type", "calories", "carbs", "recorded_at", "notes", "deleted_at", "created_at" from "meals" "meals" where ("meals"."id" = $1 and "meals"."deleted_at" is null) limit $2'[39m,
+  params: [
+    [32m'undefined'[39m,
+    [33m1[39m
+  ],
+  cause: error: column "user_id" does not exist
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\pg-pool@3.10.1_pg@8.16.3\node_modules\[4mpg-pool[24m\index.js:45:11
+  [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:161:13
+      at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:71:12[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+      at MealsService.findOne [90m(D:\Code\project\glucare-api\[39msrc\modules\meals\meals.service.ts:23:18[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-execution-context.js:46:28
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+    length: [33m107[39m,
+    severity: [32m'ERROR'[39m,
+    code: [32m'42703'[39m,
+    detail: [90mundefined[39m,
+    hint: [90mundefined[39m,
+    position: [32m'14'[39m,
+    internalPosition: [90mundefined[39m,
+    internalQuery: [90mundefined[39m,
+    where: [90mundefined[39m,
+    schema: [90mundefined[39m,
+    table: [90mundefined[39m,
+    column: [90mundefined[39m,
+    dataType: [90mundefined[39m,
+    constraint: [90mundefined[39m,
+    file: [32m'parse_relation.c'[39m,
+    line: [32m'3716'[39m,
+    routine: [32m'errorMissingColumn'[39m
+  }
+}
+[31m[Nest] 13228  - [39m23:07:33 15/02/2026 [31m  ERROR[39m [38;5;3m[ExceptionsHandler] [39mDrizzleQueryError: Failed query: select "id", "user_id", "medicine_name", "dosage", "unit", "recorded_at", "notes", "deleted_at", "created_at" from "medications" "medications" where ("medications"."id" = $1 and "medications"."deleted_at" is null) limit $2
+params: undefined,1
+    at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:73:11[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+[90m    ... 2 lines matching cause stack trace ...[39m
+    at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+  query: [32m'select "id", "user_id", "medicine_name", "dosage", "unit", "recorded_at", "notes", "deleted_at", "created_at" from "medications" "medications" where ("medications"."id" = $1 and "medications"."deleted_at" is null) limit $2'[39m,
+  params: [
+    [32m'undefined'[39m,
+    [33m1[39m
+  ],
+  cause: error: column "user_id" does not exist
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\pg-pool@3.10.1_pg@8.16.3\node_modules\[4mpg-pool[24m\index.js:45:11
+  [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:161:13
+      at NodePgPreparedQuery.queryWithCache [90m(D:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\pg-core\session.ts:71:12[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\drizzle-orm@0.45.1_@neondat_6fec10416c80280c6255f51dcf455b59\node_modules\[4msrc[24m\node-postgres\session.ts:154:19
+      at MedicationsService.findOne [90m(D:\Code\project\glucare-api\[39msrc\modules\medications\medications.service.ts:26:24[90m)[39m
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-execution-context.js:46:28
+      at [90mD:\Code\project\glucare-api\[39mnode_modules\[4m.pnpm[24m\@nestjs+core@11.1.11_@nestj_f21698ce7579297634c2f3d29d9e4f76\node_modules\[4m@nestjs[24m\core\router\router-proxy.js:9:17 {
+    length: [33m107[39m,
+    severity: [32m'ERROR'[39m,
+    code: [32m'42703'[39m,
+    detail: [90mundefined[39m,
+    hint: [90mundefined[39m,
+    position: [32m'14'[39m,
+    internalPosition: [90mundefined[39m,
+    internalQuery: [90mundefined[39m,
+    where: [90mundefined[39m,
+    schema: [90mundefined[39m,
+    table: [90mundefined[39m,
+    column: [90mundefined[39m,
+    dataType: [90mundefined[39m,
+    constraint: [90mundefined[39m,
+    file: [32m'parse_relation.c'[39m,
+    line: [32m'3716'[39m,
+    routine: [32m'errorMissingColumn'[39m
+  }
+}
+FAIL test/medications.e2e-spec.ts (14.804 s)
+  ● MedicationsController (e2e) › /v1/medications (POST) › should create medication log for User A
+
+    expected 201 "Created", got 500 "Internal Server Error"
+
+    [0m [90m 105 |[39m           notes[33m:[39m [32m'Trước ăn'[39m[33m,[39m
+     [90m 106 |[39m         })
+    [31m[1m>[22m[39m[90m 107 |[39m         [33m.[39mexpect([35m201[39m)
+     [90m     |[39m          [31m[1m^[22m[39m
+     [90m 108 |[39m         [33m.[39mexpect((res) [33m=>[39m {
+     [90m 109 |[39m           createdMedId [33m=[39m res[33m.[39mbody[33m.[39mdata[33m.[39mid[33m;[39m
+     [90m 110 |[39m           expect(res[33m.[39mbody[33m.[39mdata[33m.[39mmedicineName)[33m.[39mtoBe([32m'Insulin'[39m)[33m;[39m[0m
+
+      at Object.<anonymous> (test/medications.e2e-spec.ts:107:10)
+      ----
+      at Test._assertStatus (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+  ● MedicationsController (e2e) › /v1/medications/history (GET) › should return history for User A
+
+    expected 200 "OK", got 500 "Internal Server Error"
+
+    [0m [90m 132 |[39m         [33m.[39m[36mset[39m([32m'x-user-id'[39m[33m,[39m [32m'userA'[39m)
+     [90m 133 |[39m         [33m.[39mquery({ page[33m:[39m [35m1[39m[33m,[39m limit[33m:[39m [35m10[39m })
+    [31m[1m>[22m[39m[90m 134 |[39m         [33m.[39mexpect([35m200[39m)
+     [90m     |[39m          [31m[1m^[22m[39m
+     [90m 135 |[39m         [33m.[39mexpect((res) [33m=>[39m {
+     [90m 136 |[39m           expect([33mArray[39m[33m.[39misArray(res[33m.[39mbody[33m.[39mdata[33m.[39mdata))[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+     [90m 137 |[39m           expect(res[33m.[39mbody[33m.[39mdata[33m.[39mdata[33m.[39mlength)[33m.[39mtoBeGreaterThan([35m0[39m)[33m;[39m[0m
+
+      at Object.<anonymous> (test/medications.e2e-spec.ts:134:10)
+      ----
+      at Test._assertStatus (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+  ● MedicationsController (e2e) › /v1/medications/history (GET) › should return empty history for User B
+
+    expected 200 "OK", got 500 "Internal Server Error"
+
+    [0m [90m 144 |[39m         [33m.[39m[36mget[39m([32m'/medications/history'[39m)
+     [90m 145 |[39m         [33m.[39m[36mset[39m([32m'x-user-id'[39m[33m,[39m [32m'userB'[39m)
+    [31m[1m>[22m[39m[90m 146 |[39m         [33m.[39mexpect([35m200[39m)
+     [90m     |[39m          [31m[1m^[22m[39m
+     [90m 147 |[39m         [33m.[39mexpect((res) [33m=>[39m {
+     [90m 148 |[39m           [36mconst[39m userAData [33m=[39m res[33m.[39mbody[33m.[39mdata[33m.[39mdata[33m.[39mfind(
+     [90m 149 |[39m             (m[33m:[39m any) [33m=>[39m m[33m.[39muserId [33m===[39m userA[33m.[39msub[33m,[39m[0m
+
+      at Object.<anonymous> (test/medications.e2e-spec.ts:146:10)
+      ----
+      at Test._assertStatus (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+  ● MedicationsController (e2e) › /v1/medications/:id (GET) › should get med details for User A
+
+    expected 200 "OK", got 500 "Internal Server Error"
+
+    [0m [90m 159 |[39m         [33m.[39m[36mget[39m([32m`/medications/${createdMedId}`[39m)
+     [90m 160 |[39m         [33m.[39m[36mset[39m([32m'x-user-id'[39m[33m,[39m [32m'userA'[39m)
+    [31m[1m>[22m[39m[90m 161 |[39m         [33m.[39mexpect([35m200[39m)
+     [90m     |[39m          [31m[1m^[22m[39m
+     [90m 162 |[39m         [33m.[39mexpect((res) [33m=>[39m {
+     [90m 163 |[39m           expect(res[33m.[39mbody[33m.[39mdata[33m.[39mid)[33m.[39mtoBe(createdMedId)[33m;[39m
+     [90m 164 |[39m         })[33m;[39m[0m
+
+      at Object.<anonymous> (test/medications.e2e-spec.ts:161:10)
+      ----
+      at Test._assertStatus (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+  ● MedicationsController (e2e) › /v1/medications/:id (GET) › should throw 403/404 if User B accesses User A data
+
+    expected 400 "Bad Request", got 500 "Internal Server Error"
+
+    [0m [90m 169 |[39m         [33m.[39m[36mget[39m([32m`/medications/${createdMedId}`[39m)
+     [90m 170 |[39m         [33m.[39m[36mset[39m([32m'x-user-id'[39m[33m,[39m [32m'userB'[39m)
+    [31m[1m>[22m[39m[90m 171 |[39m         [33m.[39mexpect([35m400[39m) [90m// Ownership failure[39m
+     [90m     |[39m          [31m[1m^[22m[39m
+     [90m 172 |[39m         [33m.[39mexpect((res) [33m=>[39m {
+     [90m 173 |[39m           expect(res[33m.[39mbody[33m.[39mmessage)[33m.[39mtoBe(
+     [90m 174 |[39m             [32m'Bạn không có quyền truy cập dữ liệu này'[39m[33m,[39m[0m
+
+      at Object.<anonymous> (test/medications.e2e-spec.ts:171:10)
+      ----
+      at Test._assertStatus (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+  ● MedicationsController (e2e) › /v1/medications/:id (PATCH) › should update med for User A
+
+    expected 200 "OK", got 500 "Internal Server Error"
+
+    [0m [90m 184 |[39m         [33m.[39m[36mset[39m([32m'x-user-id'[39m[33m,[39m [32m'userA'[39m)
+     [90m 185 |[39m         [33m.[39msend({ medicineName[33m:[39m [32m'Metformin XR'[39m })
+    [31m[1m>[22m[39m[90m 186 |[39m         [33m.[39mexpect([35m200[39m)
+     [90m     |[39m          [31m[1m^[22m[39m
+     [90m 187 |[39m         [33m.[39mexpect((res) [33m=>[39m {
+     [90m 188 |[39m           expect(res[33m.[39mbody[33m.[39mdata[33m.[39mmedicineName)[33m.[39mtoBe([32m'Metformin XR'[39m)[33m;[39m
+     [90m 189 |[39m           expect(res[33m.[39mbody[33m.[39mmessage)[33m.[39mtoBe([32m'Cập nhật bản ghi thuốc thành công'[39m)[33m;[39m[0m
+
+      at Object.<anonymous> (test/medications.e2e-spec.ts:186:10)
+      ----
+      at Test._assertStatus (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+  ● MedicationsController (e2e) › /v1/medications/:id (PATCH) › should prevent User B from updating
+
+    expected 400 "Bad Request", got 500 "Internal Server Error"
+
+    [0m [90m 196 |[39m         [33m.[39m[36mset[39m([32m'x-user-id'[39m[33m,[39m [32m'userB'[39m)
+     [90m 197 |[39m         [33m.[39msend({ medicineName[33m:[39m [32m'Hack'[39m })
+    [31m[1m>[22m[39m[90m 198 |[39m         [33m.[39mexpect([35m400[39m)[33m;[39m
+     [90m     |[39m          [31m[1m^[22m[39m
+     [90m 199 |[39m     })[33m;[39m
+     [90m 200 |[39m   })[33m;[39m
+     [90m 201 |[39m[0m
+
+      at Object.<anonymous> (test/medications.e2e-spec.ts:198:10)
+      ----
+      at Test._assertStatus (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+  ● MedicationsController (e2e) › /v1/medications/:id (DELETE) › should prevent User B from deleting
+
+    expected 400 "Bad Request", got 500 "Internal Server Error"
+
+    [0m [90m 205 |[39m         [33m.[39m[36mdelete[39m([32m`/medications/${createdMedId}`[39m)
+     [90m 206 |[39m         [33m.[39m[36mset[39m([32m'x-user-id'[39m[33m,[39m [32m'userB'[39m)
+    [31m[1m>[22m[39m[90m 207 |[39m         [33m.[39mexpect([35m400[39m)[33m;[39m
+     [90m     |[39m          [31m[1m^[22m[39m
+     [90m 208 |[39m     })[33m;[39m
+     [90m 209 |[39m
+     [90m 210 |[39m     it([32m'should soft delete med for User A'[39m[33m,[39m () [33m=>[39m {[0m
+
+      at Object.<anonymous> (test/medications.e2e-spec.ts:207:10)
+      ----
+      at Test._assertStatus (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+  ● MedicationsController (e2e) › /v1/medications/:id (DELETE) › should soft delete med for User A
+
+    expected 200 "OK", got 500 "Internal Server Error"
+
+    [0m [90m 212 |[39m         [33m.[39m[36mdelete[39m([32m`/medications/${createdMedId}`[39m)
+     [90m 213 |[39m         [33m.[39m[36mset[39m([32m'x-user-id'[39m[33m,[39m [32m'userA'[39m)
+    [31m[1m>[22m[39m[90m 214 |[39m         [33m.[39mexpect([35m200[39m)
+     [90m     |[39m          [31m[1m^[22m[39m
+     [90m 215 |[39m         [33m.[39mexpect((res) [33m=>[39m {
+     [90m 216 |[39m           expect(res[33m.[39mbody[33m.[39mmessage)[33m.[39mtoBe([32m'Xóa bản ghi thuốc thành công'[39m)[33m;[39m
+     [90m 217 |[39m           expect(res[33m.[39mbody[33m.[39mdata[33m.[39mdeletedAt)[33m.[39mnot[33m.[39mtoBeNull()[33m;[39m[0m
+
+      at Object.<anonymous> (test/medications.e2e-spec.ts:214:10)
+      ----
+      at Test._assertStatus (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+  ● MedicationsController (e2e) › /v1/medications/:id (DELETE) › should not find deleted med anymore
+
+    expected 404 "Not Found", got 500 "Internal Server Error"
+
+    [0m [90m 223 |[39m         [33m.[39m[36mget[39m([32m`/medications/${createdMedId}`[39m)
+     [90m 224 |[39m         [33m.[39m[36mset[39m([32m'x-user-id'[39m[33m,[39m [32m'userA'[39m)
+    [31m[1m>[22m[39m[90m 225 |[39m         [33m.[39mexpect([35m404[39m)[33m;[39m
+     [90m     |[39m          [31m[1m^[22m[39m
+     [90m 226 |[39m       [90m// Should also check history doesn't return it ideally, but deletion test is enough for "no longer accessible via GET :id".[39m
+     [90m 227 |[39m     })[33m;[39m
+     [90m 228 |[39m   })[33m;[39m[0m
+
+      at Object.<anonymous> (test/medications.e2e-spec.ts:225:10)
+      ----
+      at Test._assertStatus (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+FAIL test/meals.e2e-spec.ts (14.919 s)
+  ● MealsController (e2e) › /v1/meals (POST) › should create meal for User A
+
+    expected 201 "Created", got 500 "Internal Server Error"
+
+    [0m [90m 107 |[39m           notes[33m:[39m [32m'Ngon'[39m[33m,[39m
+     [90m 108 |[39m         })
+    [31m[1m>[22m[39m[90m 109 |[39m         [33m.[39mexpect([35m201[39m)
+     [90m     |[39m          [31m[1m^[22m[39m
+     [90m 110 |[39m         [33m.[39mexpect((res) [33m=>[39m {
+     [90m 111 |[39m           expect(res[33m.[39mbody[33m.[39mdata[33m.[39mfoodName)[33m.[39mtoBe([32m'Bún bò'[39m)[33m;[39m
+     [90m 112 |[39m           expect(res[33m.[39mbody[33m.[39mdata[33m.[39muserId)[33m.[39mtoBe(userA[33m.[39msub)[33m;[39m[0m
+
+      at Object.<anonymous> (test/meals.e2e-spec.ts:109:10)
+      ----
+      at Test._assertStatus (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+  ● MealsController (e2e) › /v1/meals/history (GET) › should return history for User A
+
+    expected 200 "OK", got 500 "Internal Server Error"
+
+    [0m [90m 149 |[39m         [33m.[39m[36mset[39m([32m'x-user-id'[39m[33m,[39m [32m'userA'[39m)
+     [90m 150 |[39m         [33m.[39mquery({ page[33m:[39m [35m1[39m[33m,[39m limit[33m:[39m [35m10[39m })
+    [31m[1m>[22m[39m[90m 151 |[39m         [33m.[39mexpect([35m200[39m)
+     [90m     |[39m          [31m[1m^[22m[39m
+     [90m 152 |[39m         [33m.[39mexpect((res) [33m=>[39m {
+     [90m 153 |[39m           expect([33mArray[39m[33m.[39misArray(res[33m.[39mbody[33m.[39mdata[33m.[39mdata))[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+     [90m 154 |[39m           expect(res[33m.[39mbody[33m.[39mdata[33m.[39mdata[33m.[39mlength)[33m.[39mtoBeGreaterThan([35m0[39m)[33m;[39m[0m
+
+      at Object.<anonymous> (test/meals.e2e-spec.ts:151:10)
+      ----
+      at Test._assertStatus (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+  ● MealsController (e2e) › /v1/meals/history (GET) › should return empty history for User B (No data)
+
+    expected 200 "OK", got 500 "Internal Server Error"
+
+    [0m [90m 161 |[39m         [33m.[39m[36mget[39m([32m'/meals/history'[39m)
+     [90m 162 |[39m         [33m.[39m[36mset[39m([32m'x-user-id'[39m[33m,[39m [32m'userB'[39m)
+    [31m[1m>[22m[39m[90m 163 |[39m         [33m.[39mexpect([35m200[39m)
+     [90m     |[39m          [31m[1m^[22m[39m
+     [90m 164 |[39m         [33m.[39mexpect((res) [33m=>[39m {
+     [90m 165 |[39m           [90m// Assuming User B has no data created in this test run or DB is clean enough[39m
+     [90m 166 |[39m           [90m// Actually, if using shared DB, it might see other data if we reused User B ID.[39m[0m
+
+      at Object.<anonymous> (test/meals.e2e-spec.ts:163:10)
+      ----
+      at Test._assertStatus (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+  ● MealsController (e2e) › /v1/meals/:id (GET) › should get meal details for User A
+
+    expected 200 "OK", got 500 "Internal Server Error"
+
+    [0m [90m 180 |[39m         [33m.[39m[36mget[39m([32m`/meals/${createdMealId}`[39m)
+     [90m 181 |[39m         [33m.[39m[36mset[39m([32m'x-user-id'[39m[33m,[39m [32m'userA'[39m)
+    [31m[1m>[22m[39m[90m 182 |[39m         [33m.[39mexpect([35m200[39m)
+     [90m     |[39m          [31m[1m^[22m[39m
+     [90m 183 |[39m         [33m.[39mexpect((res) [33m=>[39m {
+     [90m 184 |[39m           expect(res[33m.[39mbody[33m.[39mdata[33m.[39mid)[33m.[39mtoBe(createdMealId)[33m;[39m
+     [90m 185 |[39m         })[33m;[39m[0m
+
+      at Object.<anonymous> (test/meals.e2e-spec.ts:182:10)
+      ----
+      at Test._assertStatus (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+  ● MealsController (e2e) › /v1/meals/:id (GET) › should return 400/403/404 if User B tries to access User A meal
+
+    expected 400 "Bad Request", got 500 "Internal Server Error"
+
+    [0m [90m 190 |[39m         [33m.[39m[36mget[39m([32m`/meals/${createdMealId}`[39m)
+     [90m 191 |[39m         [33m.[39m[36mset[39m([32m'x-user-id'[39m[33m,[39m [32m'userB'[39m)
+    [31m[1m>[22m[39m[90m 192 |[39m         [33m.[39mexpect([35m400[39m) [90m// Service throws BadRequest for ownership[39m
+     [90m     |[39m          [31m[1m^[22m[39m
+     [90m 193 |[39m         [33m.[39mexpect((res) [33m=>[39m {
+     [90m 194 |[39m           expect(res[33m.[39mbody[33m.[39mmessage)[33m.[39mtoBe(
+     [90m 195 |[39m             [32m'Bạn không có quyền truy cập dữ liệu này'[39m[33m,[39m[0m
+
+      at Object.<anonymous> (test/meals.e2e-spec.ts:192:10)
+      ----
+      at Test._assertStatus (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+  ● MealsController (e2e) › /v1/meals/:id (PATCH) › should update meal for User A
+
+    expected 200 "OK", got 500 "Internal Server Error"
+
+    [0m [90m 205 |[39m         [33m.[39m[36mset[39m([32m'x-user-id'[39m[33m,[39m [32m'userA'[39m)
+     [90m 206 |[39m         [33m.[39msend({ foodName[33m:[39m [32m'Phở bò tái'[39m })
+    [31m[1m>[22m[39m[90m 207 |[39m         [33m.[39mexpect([35m200[39m)
+     [90m     |[39m          [31m[1m^[22m[39m
+     [90m 208 |[39m         [33m.[39mexpect((res) [33m=>[39m {
+     [90m 209 |[39m           expect(res[33m.[39mbody[33m.[39mdata[33m.[39mfoodName)[33m.[39mtoBe([32m'Phở bò tái'[39m)[33m;[39m
+     [90m 210 |[39m           expect(res[33m.[39mbody[33m.[39mmessage)[33m.[39mtoBe([32m'Cập nhật bữa ăn thành công'[39m)[33m;[39m[0m
+
+      at Object.<anonymous> (test/meals.e2e-spec.ts:207:10)
+      ----
+      at Test._assertStatus (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+  ● MealsController (e2e) › /v1/meals/:id (PATCH) › should prevent User B from updating User A meal
+
+    expected 400 "Bad Request", got 500 "Internal Server Error"
+
+    [0m [90m 217 |[39m         [33m.[39m[36mset[39m([32m'x-user-id'[39m[33m,[39m [32m'userB'[39m)
+     [90m 218 |[39m         [33m.[39msend({ foodName[33m:[39m [32m'Hacked'[39m })
+    [31m[1m>[22m[39m[90m 219 |[39m         [33m.[39mexpect([35m400[39m)[33m;[39m
+     [90m     |[39m          [31m[1m^[22m[39m
+     [90m 220 |[39m     })[33m;[39m
+     [90m 221 |[39m   })[33m;[39m
+     [90m 222 |[39m[0m
+
+      at Object.<anonymous> (test/meals.e2e-spec.ts:219:10)
+      ----
+      at Test._assertStatus (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+  ● MealsController (e2e) › /v1/meals/:id (DELETE) › should prevent User B from deleting User A meal
+
+    expected 400 "Bad Request", got 500 "Internal Server Error"
+
+    [0m [90m 226 |[39m         [33m.[39m[36mdelete[39m([32m`/meals/${createdMealId}`[39m)
+     [90m 227 |[39m         [33m.[39m[36mset[39m([32m'x-user-id'[39m[33m,[39m [32m'userB'[39m)
+    [31m[1m>[22m[39m[90m 228 |[39m         [33m.[39mexpect([35m400[39m)[33m;[39m
+     [90m     |[39m          [31m[1m^[22m[39m
+     [90m 229 |[39m     })[33m;[39m
+     [90m 230 |[39m
+     [90m 231 |[39m     it([32m'should soft delete meal for User A'[39m[33m,[39m () [33m=>[39m {[0m
+
+      at Object.<anonymous> (test/meals.e2e-spec.ts:228:10)
+      ----
+      at Test._assertStatus (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+  ● MealsController (e2e) › /v1/meals/:id (DELETE) › should soft delete meal for User A
+
+    expected 200 "OK", got 500 "Internal Server Error"
+
+    [0m [90m 233 |[39m         [33m.[39m[36mdelete[39m([32m`/meals/${createdMealId}`[39m)
+     [90m 234 |[39m         [33m.[39m[36mset[39m([32m'x-user-id'[39m[33m,[39m [32m'userA'[39m)
+    [31m[1m>[22m[39m[90m 235 |[39m         [33m.[39mexpect([35m200[39m)
+     [90m     |[39m          [31m[1m^[22m[39m
+     [90m 236 |[39m         [33m.[39mexpect((res) [33m=>[39m {
+     [90m 237 |[39m           expect(res[33m.[39mbody[33m.[39mmessage)[33m.[39mtoBe([32m'Xóa bữa ăn thành công'[39m)[33m;[39m
+     [90m 238 |[39m           expect(res[33m.[39mbody[33m.[39mdata[33m.[39mdeletedAt)[33m.[39mnot[33m.[39mtoBeNull()[33m;[39m[0m
+
+      at Object.<anonymous> (test/meals.e2e-spec.ts:235:10)
+      ----
+      at Test._assertStatus (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+  ● MealsController (e2e) › /v1/meals/:id (DELETE) › should not find deleted meal in history
+
+    expected 404 "Not Found", got 500 "Internal Server Error"
+
+    [0m [90m 249 |[39m           [90m// So it should return null from repo.[39m
+     [90m 250 |[39m           [90m// Service throws NotFound if null.[39m
+    [31m[1m>[22m[39m[90m 251 |[39m           [33m.[39mexpect([35m404[39m)
+     [90m     |[39m            [31m[1m^[22m[39m
+     [90m 252 |[39m       )[33m;[39m
+     [90m 253 |[39m     })[33m;[39m
+     [90m 254 |[39m   })[33m;[39m[0m
+
+      at Object.<anonymous> (test/meals.e2e-spec.ts:251:12)
+      ----
+      at Test._assertStatus (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:309:14)
+      at node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/.pnpm/supertest@7.2.2/node_modules/supertest/lib/test.js:152:11)
+
+A worker process has failed to exit gracefully and has been force exited. This is likely caused by tests leaking due to improper teardown. Try running with --detectOpenHandles to find leaks. Active timers can also cause this, ensure that .unref() was called on them.
+Test Suites: 4 failed, 4 total
+Tests:       25 failed, 3 passed, 28 total
+Snapshots:   0 total
+Time:        17.864 s, estimated 20 s
+Ran all test suites.
+ ELIFECYCLE  Command failed with exit code 1.

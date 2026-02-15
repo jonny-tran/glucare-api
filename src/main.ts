@@ -8,9 +8,9 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.setGlobalPrefix('glucare-api');
   app.enableVersioning({
     type: VersioningType.URI,
+    defaultVersion: '1',
   });
   app.useGlobalInterceptors(new TransformInterceptor(new Reflector()));
   app.useGlobalFilters(new HttpExceptionFilter());
@@ -40,8 +40,8 @@ async function bootstrap() {
   if (!port) {
     throw new Error('PORT is not defined in environment variables');
   }
+  await app.listen(port);
   console.log(`Server running on port http://localhost:${port}`);
   console.log(`API docs available at http://localhost:${port}/docs`);
-  await app.listen(port);
 }
 void bootstrap();

@@ -25,10 +25,11 @@ export const connectionStatusEnum = pgEnum('connection_status', [
 ]);
 
 // E-04: Glucose
+// E-04: Glucose
 export const readingTypeEnum = pgEnum('reading_type', [
   'CGM',
   'SMBG',
-  'Manual',
+  'MANUAL',
 ]);
 export const mealContextEnum = pgEnum('meal_context', [
   'BEFORE_MEAL',
@@ -111,60 +112,59 @@ export const doctors = pgTable('doctors', {
 
 // --- 3. HEALTH DATA TABLES (Giai đoạn 1 - Core) ---
 
-// E-04: Glucose Readings
-export const glucoseReadings = pgTable('glucose_readings', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  patientId: uuid('patient_id')
-    .references(() => patients.id, { onDelete: 'cascade' })
-    .notNull(),
-  glucoseValue: decimal('glucose_value', { precision: 5, scale: 2 }).notNull(), // mg/dL
-  readingType: readingTypeEnum('reading_type').default('Manual').notNull(),
-  mealContext: mealContextEnum('meal_context').notNull(),
-  readingTime: timestamp('reading_time').defaultNow().notNull(),
-  notes: text('notes'),
-  createdAt: timestamp('created_at').defaultNow(),
-});
-
 // E-05: Meals
 export const meals = pgTable('meals', {
   id: uuid('id').defaultRandom().primaryKey(),
-  patientId: uuid('patient_id')
-    .references(() => patients.id, { onDelete: 'cascade' })
+  userId: uuid('user_id')
+    .references(() => users.id, { onDelete: 'cascade' })
     .notNull(),
+  foodName: text('food_name').notNull(),
   mealType: mealTypeEnum('meal_type').notNull(),
-  description: text('description').notNull(),
-  carbsEstimate: decimal('carbs_estimate', { precision: 5, scale: 2 }), // grams
-  imageUrl: text('image_url'), // Cho tính năng OCR sau này
-  mealTime: timestamp('meal_time').defaultNow().notNull(),
+  calories: decimal('calories', { precision: 5, scale: 2 }),
+  carbs: decimal('carbs', { precision: 5, scale: 2 }), // grams
+  recordedAt: timestamp('recorded_at').defaultNow().notNull(),
+  notes: text('notes'),
+  deletedAt: timestamp('deleted_at'),
   createdAt: timestamp('created_at').defaultNow(),
 });
 
-// E-06: Medications (Danh mục thuốc của bệnh nhân)
+// E-06: Medications (Log)
 export const medications = pgTable('medications', {
   id: uuid('id').defaultRandom().primaryKey(),
-  patientId: uuid('patient_id')
-    .references(() => patients.id, { onDelete: 'cascade' })
+  userId: uuid('user_id')
+    .references(() => users.id, { onDelete: 'cascade' })
     .notNull(),
-  name: text('name').notNull(),
-  dosage: text('dosage'), // Changed from dosageDefault (decimal) to match 'Dosage: VARCHAR'
-  frequency: text('frequency'),
-  instructions: text('instructions'),
+  medicineName: text('medicine_name').notNull(), // text
+  dosage: decimal('dosage', { precision: 5, scale: 2 }),
+  unit: text('unit'),
+  recordedAt: timestamp('recorded_at').defaultNow().notNull(),
+  notes: text('notes'),
+  deletedAt: timestamp('deleted_at'),
   createdAt: timestamp('created_at').defaultNow(),
 });
 
-// E-07: Medication Logs (Lịch sử uống thuốc)
-export const medicationLogs = pgTable('medication_logs', {
+// E-04: Glucose Readings
+export const glucoseReadings = pgTable('glucose_readings', {
   id: uuid('id').defaultRandom().primaryKey(),
-  patientId: uuid('patient_id')
-    .references(() => patients.id, { onDelete: 'cascade' })
+  userId: uuid('user_id')
+    .references(() => users.id, { onDelete: 'cascade' })
     .notNull(),
+  glucoseValue: decimal('glucose_value', { precision: 5, scale: 2 }).notNull(), // mg/dL
+  readingType: readingTypeEnum('reading_type').default('MANUAL').notNull(),
+  mealContext: mealContextEnum('meal_context').notNull(),
+  recordedAt: timestamp('recorded_at').defaultNow().notNull(),
+  notes: text('notes'),
   medicationId: uuid('medication_id').references(() => medications.id, {
     onDelete: 'set null',
   }),
-  dosageTaken: decimal('dosage_taken', { precision: 5, scale: 2 }).notNull(),
-  takenAt: timestamp('taken_at').defaultNow().notNull(),
-  notes: text('notes'),
+  mealId: uuid('meal_id').references(() => meals.id, {
+    onDelete: 'set null',
+  }),
+  deletedAt: timestamp('deleted_at'),
+  createdAt: timestamp('created_at').defaultNow(),
 });
+
+// REMOVED E-07 medicationLogs as it is merged into medications
 
 // --- 4. CONNECTION & SHARING (Giai đoạn 2) ---
 
@@ -278,57 +278,57 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   patient: one(patients, { fields: [users.id], references: [patients.userId] }),
   doctor: one(doctors, { fields: [users.id], references: [doctors.userId] }),
   chatSessions: many(chatSessions),
+  glucoseReadings: many(glucoseReadings),
+  meals: many(meals),
+  medications: many(medications),
 }));
 
 export const patientsRelations = relations(patients, ({ one, many }) => ({
   user: one(users, { fields: [patients.userId], references: [users.id] }),
-  glucoseReadings: many(glucoseReadings),
-  meals: many(meals),
-  medications: many(medications),
-  medicationLogs: many(medicationLogs),
   doctors: many(patientDoctors),
   devices: many(devices),
   reminders: many(reminders),
   healthReports: many(healthReports),
 }));
 
-export const doctorsRelations = relations(doctors, ({ one, many }) => ({
-  user: one(users, { fields: [doctors.userId], references: [users.id] }),
-  patients: many(patientDoctors),
+// ...
+
+export const mealsRelations = relations(meals, ({ one, many }) => ({
+  user: one(users, {
+    fields: [meals.userId],
+    references: [users.id],
+  }),
+  glucoseReadings: many(glucoseReadings),
 }));
 
-export const patientDoctorsRelations = relations(patientDoctors, ({ one }) => ({
-  patient: one(patients, {
-    fields: [patientDoctors.patientId],
-    references: [patients.id],
+export const medicationsRelations = relations(medications, ({ one, many }) => ({
+  user: one(users, {
+    fields: [medications.userId],
+    references: [users.id],
   }),
-  doctor: one(doctors, {
-    fields: [patientDoctors.doctorId],
-    references: [doctors.id],
-  }),
+  glucoseReadings: many(glucoseReadings),
 }));
 
-// Relation for Health Data to access Patient info back if needed
+// Update glucoseReadingsRelations to include meals and medications if needed,
+// but usually one-to-many from user is fine.
+// However, glucoseReadings has FKs to them.
 export const glucoseReadingsRelations = relations(
   glucoseReadings,
   ({ one }) => ({
-    patient: one(patients, {
-      fields: [glucoseReadings.patientId],
-      references: [patients.id],
+    user: one(users, {
+      fields: [glucoseReadings.userId],
+      references: [users.id],
+    }),
+    meal: one(meals, {
+      fields: [glucoseReadings.mealId],
+      references: [meals.id],
+    }),
+    medication: one(medications, {
+      fields: [glucoseReadings.medicationId],
+      references: [medications.id],
     }),
   }),
 );
-
-export const medicationLogsRelations = relations(medicationLogs, ({ one }) => ({
-  patient: one(patients, {
-    fields: [medicationLogs.patientId],
-    references: [patients.id],
-  }),
-  medication: one(medications, {
-    fields: [medicationLogs.medicationId],
-    references: [medications.id],
-  }),
-}));
 
 export const healthReportsRelations = relations(healthReports, ({ one }) => ({
   patient: one(patients, {

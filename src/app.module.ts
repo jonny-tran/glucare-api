@@ -5,6 +5,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { GlucoseModule } from './modules/glucose/glucose.module';
+import { MealsModule } from './modules/meals/meals.module';
+import { MedicationsModule } from './modules/medications/medications.module';
 
 @Module({
   imports: [
@@ -19,6 +22,9 @@ import { AuthModule } from './modules/auth/auth.module';
     ]),
     DatabaseModule,
     AuthModule,
+    GlucoseModule,
+    MealsModule,
+    MedicationsModule,
   ],
   controllers: [AppController],
   providers: [

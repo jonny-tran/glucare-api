@@ -31,6 +31,7 @@
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/swagger": "^11.2.4",
+    "@nestjs/terminus": "^11.0.0",
     "@nestjs/throttler": "^6.5.0",
     "argon2": "^0.44.0",
     "class-transformer": "^0.5.1",
@@ -87,6 +88,9 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^src/(.*)$": "<rootDir>/$1"
+    }
   }
 }

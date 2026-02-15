@@ -29,6 +29,20 @@
       "when": 1771131770856,
       "tag": "0003_foamy_elektra",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1771145979526,
+      "tag": "0004_odd_magik",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1771171996368,
+      "tag": "0005_nebulous_silver_sable",
+      "breakpoints": true
     }
   ]
 }
