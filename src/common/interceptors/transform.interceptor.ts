@@ -37,7 +37,7 @@ export class TransformInterceptor<T> implements NestInterceptor<
 
         const message =
           this.reflector.get<string>(RESPONSE_MESSAGE, context.getHandler()) ||
-          'Success';
+          'Thực thi thành công';
 
         return {
           statusCode: response.statusCode,

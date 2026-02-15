@@ -2,66 +2,82 @@
 trigger: always_on
 ---
 
-I need to implement Phase 1 of the Authentication module: Session Management.
-Please generate code to add 2 new APIs: Refresh Token and Logout.
+# Global Development Rules & Architecture Standards
 
-Follow the current project structure (NestJS + Drizzle ORM + Repository Pattern).
-Do not add unnecessary comments.
+## 1. Core Architecture Flow
 
-Here is the plan:
+All feature modules MUST follow this strict implementation sequence:
+**DTO -> Repository -> Service -> Controller -> Module**
 
-### 1. Update DTO (`src/modules/auth/dto/login.dto.ts`)
+### Step 1: Data Transfer Objects (DTO)
 
-- Add `RefreshTokenDto` class with a single field `refreshToken` (string, not empty).
-- Use `@ApiProperty` for Swagger.
+- Location: `src/modules/<module-name>/dto/`
+- Standards:
+  - Use `class-validator` for all input validation.
+  - Use `class-transformer` for data transformation.
+  - Mandatory `@ApiProperty` decorators for every field to sync with Swagger.
+  - Create separate files for `create`, `update`, and `query` DTOs.
 
-### 2. Update Repository (`src/modules/auth/auth.repository.ts`)
+### Step 2: Repository Layer
 
-- Add `findById(userId: string)`:
-  - Find user by ID.
-  - IMPORTANT: Must select `hashedRefreshToken` field to verify later.
-- Add `updateRefreshToken(userId: string, hashedRefreshToken: string | null)`:
-  - Update the `hashedRefreshToken` field in `users` table.
-  - Used for Logout (set to null).
+- Location: `src/modules/<module-name>/<module-name>.repository.ts`
+- Role: Pure database interaction using Drizzle ORM.
+- Standards:
+  - No business logic here.
+  - Use the schema defined in `src/database/schema.ts`.
+  - Handle all database errors and return clean data or specific DB exceptions.
 
-### 3. Update TokenService (`src/modules/auth/helper/token.service.ts`)
+### Step 3: Service Layer (The Brain)
 
-- Add `verifyRefreshToken(token: string)`:
-  - Use `JwtService.verifyAsync` with `JWT_REFRESH_SECRET` from config.
-  - Return the payload.
-  - Handle errors gracefully (throw UnauthorizedException if invalid).
+- Location: `src/modules/<module-name>/<module-name>.service.ts`
+- Role: Business logic processing and orchestration.
+- Standards:
+  - **MANDATORY**: Cross-check logic with Project CSV Files (Entities, Business Rules).
+  - Perform complex calculations (e.g., ADA Glucose classification).
+  - Use the Repository layer for data access.
 
-### 4. Update AuthService (`src/modules/auth/auth.service.ts`)
+### Step 4: Controller Layer
 
-- Implement `refreshTokens(dto: RefreshTokenDto)`:
-  1. Call `tokenService.verifyRefreshToken` to get payload (userId).
-  2. Call `authRepository.findById` to get user & stored hash.
-  3. Validate: User exists AND user has `hashedRefreshToken`.
-  4. Compare: Use `argon2.verify(user.hashedRefreshToken, dto.refreshToken)`.
-  5. If valid: Call `tokenService.generateAuthResponse` (this automatically rotates the token).
-- Implement `logout(userId: string)`:
-  1. Call `authRepository.updateRefreshToken(userId, null)`.
-  2. Return `{ message: 'Logout successful' }` or boolean.
+- Location: `src/modules/<module-name>/<module-name>.controller.ts`
+- Role: Route handling and HTTP response formatting.
+- Standards:
+  - Use `@ResponseMessage` decorator for consistent API responses.
+  - Use `@CurrentUser` decorator to extract user information from JWT.
+  - Apply `@ApiTags` and `@ApiOperation` for Swagger documentation.
+  - No business logic; only delegation to the Service layer.
 
-### 5. Update Swagger (`src/modules/auth/auth.swagger.ts`)
+### Step 5: Module Registration
 
-- Create `ApiRefresh` decorator:
-  - Summary: "Làm mới Token".
-  - Responses: 200 (Success with new tokens), 401 (Invalid token).
-- Create `ApiLogout` decorator:
-  - Summary: "Đăng xuất".
-  - Responses: 200 (Success), 401 (Unauthorized).
+- Location: `src/modules/<module-name>/<module-name>.module.ts`
+- Role: Dependency Injection (DI) wiring.
+- Standards:
+  - Export the Service and Repository if other modules need them.
+  - Import the `DatabaseModule` for Drizzle access.
 
-### 6. Update Controller (`src/modules/auth/auth.controller.ts`)
+---
 
-- Add `POST /refresh`:
-  - Public endpoint (no Guard needed, or handle manually).
-  - Body: `RefreshTokenDto`.
-  - Use `@ApiRefresh`.
-- Add `POST /logout`:
-  - Protected endpoint (Use `AtGuard`).
-  - Use `@CurrentUser('sub')` to get userId.
-  - Use `@ApiLogout`.
-  - Use `@ResponseMessage('Đăng xuất thành công')`.
+## 2. The "Common" Directory Usage
 
-Please generate the code changes for these files.
+The `src/common/` folder is reserved for shared, reusable, and cross-cutting concerns:
+
+- **`config/`**: System-wide configurations (Environment variables, constants).
+- **`decorators/`**: Custom NestJS decorators (e.g., `@CurrentUser`, `@Public`).
+- **`filters/`**: Global exception filters (e.g., `http-exception.filter.ts`).
+- **`interceptors/`**: Data transformation interceptors (e.g., `transform.interceptor.ts`).
+- **`utils/`**: Helper functions (date formatting, math helpers).
+- **`third-party/`**: Wrappers for external services (Cloudinary, Firebase, Gemini API).
+
+**Note**: If a requirement is not present in the CSV files, DO NOT implement it. Ask the user for confirmation.
+
+[MISSING SPECIFICATION PROTOCOL]
+Immediate Halt: If a user request involves a feature, entity, or business rule not found in the docs/ folder, you MUST NOT proceed with implementation or provide a "hallucinated" solution.
+
+Mandatory Clarification: You are required to stop and respond with the following message:
+
+"The requested logic/information is not present in the docs/ specification folder. I cannot assume the implementation details. Do you want to add this feature to the project scope, or should we re-verify the documentation?"
+
+Verification: Always double-check 05-entities-schema.md for table structures and 02-business-rules.md for logic before claiming information is missing.
+
+---
+
+_Generated by Gluecare Lead Architect - Rule V1.0_

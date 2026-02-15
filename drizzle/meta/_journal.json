@@ -15,6 +15,20 @@
       "when": 1768180834764,
       "tag": "0001_fast_shadow_king",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1770954303227,
+      "tag": "0002_oval_selene",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1771131770856,
+      "tag": "0003_foamy_elektra",
+      "breakpoints": true
     }
   ]
 }
