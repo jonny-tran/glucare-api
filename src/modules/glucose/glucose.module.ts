@@ -19,6 +19,6 @@ import { GlucoseStorageService } from './services/glucose-storage.service';
     GlucoseDashboardService,
     GlucoseReportService,
   ],
-  exports: [GlucoseService],
+  exports: [GlucoseService, GlucoseRepository, GlucoseAnalyticsService],
 })
 export class GlucoseModule {}

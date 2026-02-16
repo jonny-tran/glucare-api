@@ -8,6 +8,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
 
@@ -169,17 +170,36 @@ export const glucoseReadings = pgTable('glucose_readings', {
 // --- 4. CONNECTION & SHARING (Giai đoạn 2) ---
 
 // E-03: Patient-Doctor Relationship (Quản lý kết nối)
-export const patientDoctors = pgTable('patient_doctors', {
+export const patientDoctors = pgTable(
+  'patient_doctors',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    patientId: uuid('patient_id')
+      .references(() => patients.id, { onDelete: 'cascade' })
+      .notNull(),
+    doctorId: uuid('doctor_id')
+      .references(() => doctors.id, { onDelete: 'cascade' })
+      .notNull(),
+    status: connectionStatusEnum('status').default('PENDING').notNull(),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+  },
+  (t) => ({
+    unq: uniqueIndex('patient_doctors_unq').on(t.patientId, t.doctorId),
+  }),
+);
+
+// E-08: Doctor Notes (Ghi chú của bác sĩ về bệnh nhân)
+export const doctorNotes = pgTable('doctor_notes', {
   id: uuid('id').defaultRandom().primaryKey(),
-  patientId: uuid('patient_id')
-    .references(() => patients.id, { onDelete: 'cascade' })
-    .notNull(),
   doctorId: uuid('doctor_id')
     .references(() => doctors.id, { onDelete: 'cascade' })
     .notNull(),
-  status: connectionStatusEnum('status').default('PENDING').notNull(),
+  patientId: uuid('patient_id')
+    .references(() => patients.id, { onDelete: 'cascade' })
+    .notNull(),
+  content: text('content').notNull(),
   createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
 });
 
 // E-10: Data Sharing Settings (Quyền truy cập chi tiết)
@@ -283,12 +303,19 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   medications: many(medications),
 }));
 
+export const doctorsRelations = relations(doctors, ({ one, many }) => ({
+  user: one(users, { fields: [doctors.userId], references: [users.id] }),
+  patients: many(patientDoctors),
+  notes: many(doctorNotes),
+}));
+
 export const patientsRelations = relations(patients, ({ one, many }) => ({
   user: one(users, { fields: [patients.userId], references: [users.id] }),
   doctors: many(patientDoctors),
   devices: many(devices),
   reminders: many(reminders),
   healthReports: many(healthReports),
+  notes: many(doctorNotes),
 }));
 
 // ...

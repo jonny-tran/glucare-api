@@ -5,9 +5,13 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { ConnectionsModule } from './modules/connections/connections.module';
+import { DataSharingModule } from './modules/data-sharing/data-sharing.module';
+import { DoctorsModule } from './modules/doctors/doctors.module';
 import { GlucoseModule } from './modules/glucose/glucose.module';
 import { MealsModule } from './modules/meals/meals.module';
 import { MedicationsModule } from './modules/medications/medications.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
@@ -25,6 +29,10 @@ import { MedicationsModule } from './modules/medications/medications.module';
     GlucoseModule,
     MealsModule,
     MedicationsModule,
+    UsersModule,
+    ConnectionsModule,
+    DataSharingModule,
+    DoctorsModule,
   ],
   controllers: [AppController],
   providers: [
