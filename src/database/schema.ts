@@ -57,10 +57,8 @@ export const connectionTypeEnum = pgEnum('connection_type', [
 
 // E-09: Reminders
 export const reminderTypeEnum = pgEnum('reminder_type', [
-  'MEDICATION',
-  'GLUCOSE',
-  'MEAL',
-  'EXERCISE',
+  'MEDICINE',
+  'MEASUREMENT',
 ]);
 
 // E-13: Chat Session
@@ -245,15 +243,33 @@ export const healthReports = pgTable('health_reports', {
 // Reminders
 export const reminders = pgTable('reminders', {
   id: uuid('id').defaultRandom().primaryKey(),
-  patientId: uuid('patient_id')
-    .references(() => patients.id, { onDelete: 'cascade' })
+  userId: uuid('user_id')
+    .references(() => users.id, { onDelete: 'cascade' })
     .notNull(),
+  medicationId: uuid('medication_id').references(() => medications.id, {
+    onDelete: 'set null',
+  }),
   title: text('title').notNull(),
   type: reminderTypeEnum('type').notNull(),
-  time: text('time').notNull(), // "08:00"
+  time: text('time').notNull(), // "HH:mm"
   daysOfWeek: json('days_of_week').$type<number[]>(), // [0, 1, 2...6] (Sunday to Saturday)
-  isEnabled: boolean('is_enabled').default(true),
+  timezone: text('timezone').default('Asia/Ho_Chi_Minh'),
+  isActive: boolean('is_active').default(true),
+  deletedAt: timestamp('deleted_at'),
+  updatedAt: timestamp('updated_at').defaultNow(),
   createdAt: timestamp('created_at').defaultNow(),
+});
+
+// Notification Tokens
+export const notificationTokens = pgTable('notification_tokens', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => users.id, { onDelete: 'cascade' })
+    .notNull(),
+  fcmToken: text('fcm_token').unique().notNull(),
+  deviceType: text('device_type'), // e.g., 'ios', 'android'
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
 });
 
 // E-11: Devices
@@ -301,6 +317,8 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   glucoseReadings: many(glucoseReadings),
   meals: many(meals),
   medications: many(medications),
+  reminders: many(reminders),
+  notificationTokens: many(notificationTokens),
 }));
 
 export const doctorsRelations = relations(doctors, ({ one, many }) => ({
@@ -313,7 +331,6 @@ export const patientsRelations = relations(patients, ({ one, many }) => ({
   user: one(users, { fields: [patients.userId], references: [users.id] }),
   doctors: many(patientDoctors),
   devices: many(devices),
-  reminders: many(reminders),
   healthReports: many(healthReports),
   notes: many(doctorNotes),
 }));
@@ -334,6 +351,7 @@ export const medicationsRelations = relations(medications, ({ one, many }) => ({
     references: [users.id],
   }),
   glucoseReadings: many(glucoseReadings),
+  reminders: many(reminders),
 }));
 
 // Update glucoseReadingsRelations to include meals and medications if needed,
@@ -370,3 +388,24 @@ export const chatSessionsRelations = relations(chatSessions, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+export const remindersRelations = relations(reminders, ({ one }) => ({
+  user: one(users, {
+    fields: [reminders.userId],
+    references: [users.id],
+  }),
+  medication: one(medications, {
+    fields: [reminders.medicationId],
+    references: [medications.id],
+  }),
+}));
+
+export const notificationTokensRelations = relations(
+  notificationTokens,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [notificationTokens.userId],
+      references: [users.id],
+    }),
+  }),
+);

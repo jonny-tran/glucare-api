@@ -1,8 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConnectionsRepository } from '../connections/connections.repository';
+import { GlucoseFilterDto } from '../glucose/dto/glucose-filter.dto';
 import { GlucoseRepository } from '../glucose/glucose.repository';
+import { GlucoseService } from '../glucose/glucose.service';
 import { IGlucoseReading } from '../glucose/interfaces/glucose.interface';
 import { GlucoseAnalyticsService } from '../glucose/services/glucose-analytics.service';
+import { MealFilterDto } from '../meals/dto/meal-filter.dto';
+import { MealsService } from '../meals/meals.service';
+import { MedicationFilterDto } from '../medications/dto/medication-filter.dto';
+import { MedicationsService } from '../medications/medications.service';
 import { UsersRepository } from '../users/users.repository';
 import { DoctorNotesRepository } from './doctor-notes.repository';
 import { CreateNoteDto } from './dto/create-note.dto';
@@ -19,21 +25,6 @@ export interface IPatientOverview {
   dangerDetails: string;
 }
 
-// Partial Type to match Repository Result structure
-// We can define minimal requirements.
-interface IDoctorConnection {
-  status: 'PENDING' | 'ACTIVE' | 'REJECTED' | 'CANCELLED';
-  patient: {
-    id: string;
-    user: {
-      id: string;
-      fullName: string | null;
-      email: string | null;
-      avatarUrl: string | null;
-    } | null;
-  } | null;
-}
-
 @Injectable()
 export class DoctorsService {
   constructor(
@@ -42,101 +33,88 @@ export class DoctorsService {
     private readonly glucoseRepo: GlucoseRepository,
     private readonly glucoseAnalytics: GlucoseAnalyticsService,
     private readonly doctorNotesRepo: DoctorNotesRepository,
+    private readonly glucoseService: GlucoseService,
+    private readonly mealsService: MealsService,
+    private readonly medicationsService: MedicationsService,
   ) {}
 
-  async getPatients(userId: string): Promise<IPatientOverview[]> {
+  async getPatients(
+    userId: string,
+    dangerLevel?: string,
+  ): Promise<IPatientOverview[]> {
     // 1. Get Doctor Profile
     const doctor = await this.usersRepo.findDoctorByUserId(userId);
     if (!doctor) throw new NotFoundException('Doctor profile not found');
 
-    // 2. Get Connected Patients (Active only)
-    // Explicitly cast the result or assume repo returns compatible structure.
-    // Since we don't have deeply inferred types exported from repo, we use unknown -> specific interface cast or assertion.
-    const connections = (await this.connectionsRepo.findAllForDoctor(
+    // 2. Get Connected Patients with DB-level Filtering
+    const overviewRows = await this.connectionsRepo.findPatientsWithOverview(
       doctor.id,
-    )) as unknown as IDoctorConnection[];
-
-    const activeConnections = connections.filter((c) => c.status === 'ACTIVE');
+      dangerLevel,
+    );
 
     const result: IPatientOverview[] = [];
 
-    // 3. Populate Dashboard Data
-    for (const conn of activeConnections) {
-      // Strict Null Checks
-      if (!conn.patient || !conn.patient.user) continue;
+    // 3. Populate TIR and Map Data
+    for (const row of overviewRows) {
+      const patientUserId = row.userId as string;
 
-      const patient = conn.patient;
-      const patientUser = conn.patient.user; // Re-access through checked connection to ensure type safety
-      if (!patientUser) continue;
-
-      // A. Get Latest Glucose
-      const latestReading = await this.glucoseRepo.findLatest(patientUser.id);
-
-      // B. Calculate TIR (Last 7 days)
+      // Calculate TIR (Last 7 days)
       const endDate = new Date();
       const startDate = new Date();
       startDate.setDate(endDate.getDate() - 7);
 
       const readings = await this.glucoseRepo.findByDateRange(
-        patientUser.id,
+        patientUserId,
         startDate,
         endDate,
       );
 
       // Map DB result to Interface
-      // We perform explicit mapping to ensure runtime safety and type compliance
       const mappedReadings: IGlucoseReading[] = readings.map((r) => ({
         userId: r.userId,
         glucoseValue: r.glucoseValue,
         readingType: r.readingType,
         mealContext: r.mealContext,
         recordedAt: r.recordedAt,
-        notes: r.notes || undefined, // Transform null to undefined if interface requires optional
+        notes: r.notes || undefined,
         createdAt: r.createdAt || undefined,
       }));
 
       const { tir } = this.glucoseAnalytics.calculateTIR(mappedReadings);
 
-      // C. Determine Status
-      let status: 'RED' | 'YELLOW' | 'GREEN' | 'GREY' = 'GREY';
-      let dangerLevelDetails = 'No Data';
-
-      if (latestReading) {
-        const val = parseFloat(latestReading.glucoseValue);
-
-        if (val < 54 || val > 250) {
-          status = 'RED';
-          dangerLevelDetails =
-            val < 54 ? 'Hypoglycemia Critical' : 'Hyperglycemia Critical';
-        } else if (val < 70 || val > 180) {
-          status = 'YELLOW';
-          dangerLevelDetails = 'Out of Target';
-        } else {
-          status = 'GREEN';
-          dangerLevelDetails = 'Stable';
-        }
-      }
-
       result.push({
-        id: patient.id,
-        fullName: patientUser.fullName,
-        email: patientUser.email,
-        avatarUrl: patientUser.avatarUrl,
-        lastGlucose: latestReading
-          ? parseFloat(latestReading.glucoseValue)
+        id: row.patientId as string,
+        fullName: row.fullName as string | null,
+        email: row.email as string | null,
+        avatarUrl: row.avatarUrl as string | null,
+        lastGlucose: row.lastGlucose
+          ? parseFloat(row.lastGlucose as string)
           : null,
-        lastGlucoseTime: latestReading ? latestReading.recordedAt : null,
+        lastGlucoseTime: row.lastGlucoseTime as Date | null,
         tir7Days: tir,
-        dangerLevel: status,
-        dangerDetails: dangerLevelDetails,
+        dangerLevel: row.dangerLevel as 'RED' | 'YELLOW' | 'GREEN' | 'GREY',
+        dangerDetails: this.getDangerDetails(
+          row.lastGlucose ? parseFloat(row.lastGlucose as string) : null,
+        ),
       });
     }
 
-    // Sort by Danger Level (Red (0) > Yellow (1) > Green (2) > Grey (3))
+    // Sort by Danger Level
     return result.sort((a, b) => {
       const prioritize = { RED: 0, YELLOW: 1, GREEN: 2, GREY: 3 };
       return prioritize[a.dangerLevel] - prioritize[b.dangerLevel];
     });
+  }
+
+  private getDangerDetails(val: number | null): string {
+    if (val === null) return 'No Data';
+    if (val < 54 || val > 250) {
+      return val < 54 ? 'Hypoglycemia Critical' : 'Hyperglycemia Critical';
+    } else if (val < 70 || val > 180) {
+      return 'Out of Target';
+    } else {
+      return 'Stable';
+    }
   }
 
   // Doctor Notes Logic
@@ -168,5 +146,26 @@ export class DoctorsService {
     if (!doctor) throw new NotFoundException('Doctor profile not found');
 
     return this.doctorNotesRepo.findByPatient(patientId, doctor.id);
+  }
+
+  async getPatientUserId(patientId: string): Promise<string> {
+    const patient = await this.usersRepo.findPatientById(patientId);
+    if (!patient) throw new NotFoundException('Patient not found');
+    return patient.userId;
+  }
+
+  async getPatientGlucose(patientId: string, query: GlucoseFilterDto) {
+    const userId = await this.getPatientUserId(patientId);
+    return this.glucoseService.getHistory(userId, query);
+  }
+
+  async getPatientMeals(patientId: string, query: MealFilterDto) {
+    const userId = await this.getPatientUserId(patientId);
+    return this.mealsService.findAll(userId, query);
+  }
+
+  async getPatientMedications(patientId: string, query: MedicationFilterDto) {
+    const userId = await this.getPatientUserId(patientId);
+    return this.medicationsService.findAll(userId, query);
   }
 }

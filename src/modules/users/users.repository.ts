@@ -17,6 +17,12 @@ export class UsersRepository {
     });
   }
 
+  async findPatientById(id: string) {
+    return this.db.query.patients.findFirst({
+      where: eq(schema.patients.id, id),
+    });
+  }
+
   async findDoctorByUserId(userId: string) {
     return this.db.query.doctors.findFirst({
       where: eq(schema.doctors.userId, userId),

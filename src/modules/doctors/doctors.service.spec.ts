@@ -1,8 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConnectionsRepository } from '../connections/connections.repository';
 import { GlucoseRepository } from '../glucose/glucose.repository';
+import { GlucoseService } from '../glucose/glucose.service';
 import { GlucoseAnalyticsService } from '../glucose/services/glucose-analytics.service';
+import { MealsService } from '../meals/meals.service';
+import { MedicationsService } from '../medications/medications.service';
 import { UsersRepository } from '../users/users.repository';
+import { DoctorNotesRepository } from './doctor-notes.repository';
 import { DoctorsService } from './doctors.service';
 
 interface MockGlucoseRepository {
@@ -12,6 +16,7 @@ interface MockGlucoseRepository {
 
 interface MockConnectionsRepository {
   findAllForDoctor: jest.Mock;
+  findPatientsWithOverview: jest.Mock;
 }
 
 interface MockUsersRepository {
@@ -32,22 +37,37 @@ describe('DoctorsService', () => {
 
     const mockConnectionsRepo = {
       findAllForDoctor: jest.fn(),
+      findPatientsWithOverview: jest.fn(),
     };
 
     const mockUsersRepo = {
       findDoctorByUserId: jest.fn(),
+      findPatientById: jest.fn(),
     };
+
+    const mockDoctorNotesRepo = {
+      create: jest.fn(),
+      findByPatient: jest.fn(),
+    };
+
+    const mockGlucoseService = { getHistory: jest.fn() };
+    const mockMealsService = { findAll: jest.fn() };
+    const mockMedicationsService = { findAll: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DoctorsService,
-        { provide: GlucoseRepository, useValue: mockGlucoseRepo },
         { provide: ConnectionsRepository, useValue: mockConnectionsRepo },
         { provide: UsersRepository, useValue: mockUsersRepo },
+        { provide: GlucoseRepository, useValue: mockGlucoseRepo },
         {
           provide: GlucoseAnalyticsService,
           useValue: new GlucoseAnalyticsService(),
-        }, // Use real analytics or mock if complex
+        },
+        { provide: DoctorNotesRepository, useValue: mockDoctorNotesRepo },
+        { provide: GlucoseService, useValue: mockGlucoseService },
+        { provide: MealsService, useValue: mockMealsService },
+        { provide: MedicationsService, useValue: mockMedicationsService },
       ],
     }).compile();
 
@@ -70,21 +90,22 @@ describe('DoctorsService', () => {
       id: 'patient-1',
       user: patientUser,
     };
-    const activeConnection = {
-      status: 'ACTIVE',
-      patient: patientProfile,
-    };
 
     it('should classify Critical High (RED) correctly', async () => {
       usersRepo.findDoctorByUserId.mockResolvedValue({ id: doctorId });
-      connectionsRepo.findAllForDoctor.mockResolvedValue([activeConnection]);
-
-      // Mock HIGH glucose
-      glucoseRepo.findLatest.mockResolvedValue({
-        glucoseValue: '300.00',
-        recordedAt: new Date(),
-      });
-      glucoseRepo.findByDateRange.mockResolvedValue([]); // No history for TIR test
+      connectionsRepo.findPatientsWithOverview.mockResolvedValue([
+        {
+          patientId: patientProfile.id,
+          userId: patientUser.id,
+          fullName: patientUser.fullName,
+          email: patientUser.email,
+          avatarUrl: patientUser.avatarUrl,
+          lastGlucose: '300.00',
+          lastGlucoseTime: new Date(),
+          dangerLevel: 'RED',
+        },
+      ]);
+      glucoseRepo.findByDateRange.mockResolvedValue([]);
 
       const result = await service.getPatients(doctorUserId);
 
@@ -94,13 +115,18 @@ describe('DoctorsService', () => {
 
     it('should classify Critical Low (RED) correctly', async () => {
       usersRepo.findDoctorByUserId.mockResolvedValue({ id: doctorId });
-      connectionsRepo.findAllForDoctor.mockResolvedValue([activeConnection]);
-
-      // Mock LOW glucose
-      glucoseRepo.findLatest.mockResolvedValue({
-        glucoseValue: '40.00',
-        recordedAt: new Date(),
-      });
+      connectionsRepo.findPatientsWithOverview.mockResolvedValue([
+        {
+          patientId: patientProfile.id,
+          userId: patientUser.id,
+          fullName: patientUser.fullName,
+          email: patientUser.email,
+          avatarUrl: patientUser.avatarUrl,
+          lastGlucose: '40.00',
+          lastGlucoseTime: new Date(),
+          dangerLevel: 'RED',
+        },
+      ]);
       glucoseRepo.findByDateRange.mockResolvedValue([]);
 
       const result = await service.getPatients(doctorUserId);
@@ -111,13 +137,18 @@ describe('DoctorsService', () => {
 
     it('should classify Stable (GREEN) correctly', async () => {
       usersRepo.findDoctorByUserId.mockResolvedValue({ id: doctorId });
-      connectionsRepo.findAllForDoctor.mockResolvedValue([activeConnection]);
-
-      // Mock NORMAL glucose
-      glucoseRepo.findLatest.mockResolvedValue({
-        glucoseValue: '100.00',
-        recordedAt: new Date(),
-      });
+      connectionsRepo.findPatientsWithOverview.mockResolvedValue([
+        {
+          patientId: patientProfile.id,
+          userId: patientUser.id,
+          fullName: patientUser.fullName,
+          email: patientUser.email,
+          avatarUrl: patientUser.avatarUrl,
+          lastGlucose: '100.00',
+          lastGlucoseTime: new Date(),
+          dangerLevel: 'GREEN',
+        },
+      ]);
       glucoseRepo.findByDateRange.mockResolvedValue([]);
 
       const result = await service.getPatients(doctorUserId);
@@ -128,17 +159,56 @@ describe('DoctorsService', () => {
 
     it('should handle patients with NO data gracefully (GREY)', async () => {
       usersRepo.findDoctorByUserId.mockResolvedValue({ id: doctorId });
-      connectionsRepo.findAllForDoctor.mockResolvedValue([activeConnection]);
-
-      // Mock NO glucose
-      glucoseRepo.findLatest.mockResolvedValue(null);
+      connectionsRepo.findPatientsWithOverview.mockResolvedValue([
+        {
+          patientId: patientProfile.id,
+          userId: patientUser.id,
+          fullName: patientUser.fullName,
+          email: patientUser.email,
+          avatarUrl: patientUser.avatarUrl,
+          lastGlucose: null,
+          lastGlucoseTime: null,
+          dangerLevel: 'GREY',
+        },
+      ]);
       glucoseRepo.findByDateRange.mockResolvedValue([]);
 
       const result = await service.getPatients(doctorUserId);
 
       expect(result[0].dangerLevel).toBe('GREY');
       expect(result[0].lastGlucose).toBeNull();
-      expect(result[0].tir7Days).toBe(0); // Should default to 0
+      expect(result[0].tir7Days).toBe(0);
+    });
+  });
+
+  describe('Updated Business Logic', () => {
+    const doctorUserId = 'doctor-user-1';
+    const doctorId = 'doctor-1';
+
+    it('should use findPatientsWithOverview from connectionsRepo', async () => {
+      usersRepo.findDoctorByUserId.mockResolvedValue({ id: doctorId });
+      connectionsRepo.findPatientsWithOverview.mockResolvedValue([
+        {
+          patientId: 'p1',
+          userId: 'u1',
+          fullName: 'John Doe',
+          email: 'john@example.com',
+          avatarUrl: null,
+          lastGlucose: '120.00',
+          lastGlucoseTime: new Date(),
+          dangerLevel: 'GREEN',
+        },
+      ]);
+      glucoseRepo.findByDateRange.mockResolvedValue([]);
+
+      const result = await service.getPatients(doctorUserId);
+
+      expect(connectionsRepo.findPatientsWithOverview).toHaveBeenCalledWith(
+        doctorId,
+        undefined,
+      );
+      expect(result[0].fullName).toBe('John Doe');
+      expect(result[0].dangerLevel).toBe('GREEN');
     });
   });
 });
