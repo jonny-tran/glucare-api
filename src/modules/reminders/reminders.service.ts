@@ -14,6 +14,10 @@ export class RemindersService {
   ) {}
 
   async create(userId: string, dto: CreateReminderDto) {
+    // 4. Logic Clean-up trước khi khởi tạo:
+    // Xóa/Đồng bộ lại tất cả Repeatable Jobs cũ của User để tránh job "ma" tích tụ
+    await this.cleanupUserJobs(userId);
+
     const reminder = await this.repo.create(userId, dto);
 
     if (reminder.isActive) {
@@ -94,6 +98,9 @@ export class RemindersService {
     timezone: string,
     title: string,
   ) {
+    // Luôn dọn dẹp job cũ của cùng một id để đề phòng duplicated jobs nếu có
+    await this.removeJob(id);
+
     const cronExp = calculateUtcCron(time, daysOfWeek, timezone);
     if (!cronExp) return;
 
@@ -119,6 +126,45 @@ export class RemindersService {
     for (const job of repeatableJobs) {
       if (job.id === jobId) {
         await this.remindersQueue.removeRepeatableByKey(job.key);
+      }
+    }
+  }
+
+  private async cleanupUserJobs(userId: string) {
+    const userReminders = await this.repo.findAllByUser(userId);
+    const userReminderIds = new Set(
+      userReminders.map((r) => `reminder-${r.id}`),
+    );
+
+    const repeatableJobs = await this.remindersQueue.getRepeatableJobs();
+    for (const job of repeatableJobs) {
+      if (job.id && userReminderIds.has(job.id)) {
+        await this.remindersQueue.removeRepeatableByKey(job.key);
+      }
+    }
+
+    for (const reminder of userReminders) {
+      if (reminder.isActive) {
+        const cronExp = calculateUtcCron(
+          reminder.time,
+          reminder.daysOfWeek as number[],
+          reminder.timezone || 'Asia/Ho_Chi_Minh',
+        );
+
+        if (cronExp) {
+          await this.remindersQueue.add(
+            'send-reminder',
+            {
+              reminderId: reminder.id,
+              userId: reminder.userId,
+              title: reminder.title,
+            },
+            {
+              jobId: `reminder-${reminder.id}`,
+              repeat: { pattern: cronExp },
+            },
+          );
+        }
       }
     }
   }

@@ -25,7 +25,13 @@ import { RedisModule } from './redis/redis.module';
     BullModule.forRootAsync({
       inject: ['REDIS_CLIENT'],
       useFactory: (redisClient: any) => ({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         connection: redisClient,
+        defaultJobOptions: {
+          removeOnComplete: true,
+          removeOnFail: 1000,
+          attempts: 3,
+        },
       }),
     }),
     ThrottlerModule.forRoot([

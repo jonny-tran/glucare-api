@@ -4,7 +4,12 @@ import { Job } from 'bullmq';
 import { NotificationsService } from '../notifications/notifications.service';
 import { RemindersRepository } from './reminders.repository';
 
-@Processor('reminders')
+@Processor('reminders', {
+  concurrency: 1,
+  drainDelay: 10,
+  lockDuration: 30000,
+  stalledInterval: 30000,
+})
 export class RemindersProcessor extends WorkerHost {
   private readonly logger = new Logger(RemindersProcessor.name);
 
@@ -15,7 +20,9 @@ export class RemindersProcessor extends WorkerHost {
     super();
   }
 
-  async process(job: Job<any>) {
+  async process(
+    job: Job<{ reminderId: string; userId: string; title: string }>,
+  ) {
     this.logger.log(`Processing reminder job: ${job.id}`);
     const data = job.data;
     const reminderId = data.reminderId;
