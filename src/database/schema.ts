@@ -13,6 +13,11 @@ import {
 } from 'drizzle-orm/pg-core';
 
 // --- 1. ENUMS DEFINITION (Source of Truth) ---
+export enum UserRole {
+  ADMIN = 'ADMIN',
+  DOCTOR = 'DOCTOR',
+  PATIENT = 'PATIENT',
+}
 export const userRoleEnum = pgEnum('user_role', ['ADMIN', 'DOCTOR', 'PATIENT']);
 export const genderEnum = pgEnum('gender', ['M', 'F', 'O']);
 export const diabetesTypeEnum = pgEnum('diabetes_type', ['GDM', 'T1D', 'T2D']);
