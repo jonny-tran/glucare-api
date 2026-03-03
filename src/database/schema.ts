@@ -95,6 +95,21 @@ export const reminderTypeEnum = pgEnum('reminder_type', [
 export const sessionTypeEnum = pgEnum('session_type', ['AI', 'Doctor']);
 export const chatStatusEnum = pgEnum('chat_status', ['Active', 'Closed']);
 
+// E-07: Exercise
+export const intensityLevelEnum = pgEnum('intensity_level', [
+  'LOW',
+  'MEDIUM',
+  'HIGH',
+]);
+
+// E-08: Appointment
+export const appointmentStatusEnum = pgEnum('appointment_status', [
+  'PENDING',
+  'CONFIRMED',
+  'CANCELLED',
+  'COMPLETED',
+]);
+
 // --- 2. CORE TABLES ---
 
 // E-01 & E-02 Base User
@@ -379,7 +394,41 @@ export const chatSessions = pgTable('chat_sessions', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
-// --- 6. RELATIONS ---
+// --- 6. EXERCISES & APPOINTMENTS ---
+
+// E-07: Exercises (Nhật ký vận động)
+export const exercises = pgTable('exercises', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => users.id, { onDelete: 'cascade' })
+    .notNull(),
+  exerciseType: text('exercise_type').notNull(), // e.g., Walking, Running, Gym
+  duration: integer('duration').notNull(), // đơn vị: phút
+  intensity: intensityLevelEnum('intensity').notNull(),
+  caloriesBurned: decimal('calories_burned', { precision: 6, scale: 2 }),
+  startTime: timestamp('start_time').notNull(),
+  notes: text('notes'),
+  deletedAt: timestamp('deleted_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// E-08: Appointments (Lịch hẹn tái khám)
+export const appointments = pgTable('appointments', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => users.id, { onDelete: 'cascade' })
+    .notNull(),
+  doctorId: uuid('doctor_id')
+    .references(() => doctors.id, { onDelete: 'cascade' })
+    .notNull(),
+  appointmentDate: timestamp('appointment_date').notNull(),
+  status: appointmentStatusEnum('status').default('PENDING').notNull(),
+  reason: text('reason'), // Lý do hủy hoặc ghi chú
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// --- 7. RELATIONS ---
 
 export const usersRelations = relations(users, ({ one, many }) => ({
   patient: one(patients, { fields: [users.id], references: [patients.userId] }),
@@ -391,6 +440,8 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   reminders: many(reminders),
   notificationTokens: many(notificationTokens),
   aiUsageLogs: many(aiUsageLogs),
+  exercises: many(exercises),
+  appointments: many(appointments),
 }));
 
 // Categories <-> Articles
@@ -504,3 +555,23 @@ export const notificationTokensRelations = relations(
     }),
   }),
 );
+
+// E-07: Exercises Relations
+export const exercisesRelations = relations(exercises, ({ one }) => ({
+  user: one(users, {
+    fields: [exercises.userId],
+    references: [users.id],
+  }),
+}));
+
+// E-08: Appointments Relations
+export const appointmentsRelations = relations(appointments, ({ one }) => ({
+  user: one(users, {
+    fields: [appointments.userId],
+    references: [users.id],
+  }),
+  doctor: one(doctors, {
+    fields: [appointments.doctorId],
+    references: [doctors.id],
+  }),
+}));
