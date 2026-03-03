@@ -80,7 +80,7 @@ export class DoctorsService {
         createdAt: r.createdAt || undefined,
       }));
 
-      const { tir } = this.glucoseAnalytics.calculateTIR(mappedReadings);
+      const { tir } = await this.glucoseAnalytics.calculateTIR(mappedReadings);
 
       result.push({
         id: row.patientId as string,

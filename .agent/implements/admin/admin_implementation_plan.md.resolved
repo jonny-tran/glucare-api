@@ -1,0 +1,276 @@
+# 📋 KẾ HOẠCH TRIỂN KHAI ADMIN MODULES - GlucoDia
+
+## Tổng quan phân tích
+
+Sau khi đọc toàn bộ 4 file đặc tả kỹ thuật và quét codebase hiện tại, dưới đây là báo cáo chi tiết về **thư viện cần cài đặt** và **thay đổi Schema** trước khi bắt đầu sinh mã nguồn.
+
+---
+
+## 1. 📦 PHÂN TÍCH THƯ VIỆN (DEPENDENCIES)
+
+### Hiện trạng [package.json](file:///d:/Code/project/glucare-api/package.json)
+
+| Package | Trạng thái | Ghi chú |
+|---------|-----------|---------|
+| `@nestjs/common` | ✅ Có (v11) | |
+| `@nestjs/swagger` | ✅ Có (v11) | |
+| `class-validator` | ✅ Có | |
+| `class-transformer` | ✅ Có | |
+| `drizzle-orm` | ✅ Có | |
+| `firebase-admin` | ✅ Có | Dùng cho upload thumbnail |
+| `ioredis` | ✅ Có | Nhưng **KHÔNG** dùng cho cache-manager (xem bên dưới) |
+
+### Thư viện CẦN CÀI ĐẶT MỚI
+
+| Package | Phiên bản | Mục đích | Module sử dụng |
+|---------|-----------|----------|----------------|
+| `@nestjs/cache-manager` | `^3.0.1` | In-memory caching cho SystemConfig & Dashboard | SystemConfig, Dashboard |
+| `cache-manager` | `^6.0.0` | Core cache driver (peer dependency) | SystemConfig, Dashboard |
+| `@nestjs/schedule` | `^5.0.0` | Cronjob scheduled tasks | Dashboard (CronJob) |
+
+### Lệnh cài đặt
+
+```bash
+pnpm add @nestjs/cache-manager cache-manager @nestjs/schedule
+```
+
+> [!IMPORTANT]
+> **KHÔNG** dùng Redis cho cache trong scope này. Đặc tả chỉ yêu cầu **In-memory Cache** (`cache-manager` mặc định dùng memory store). Điều này giữ cho hệ thống đơn giản và tránh dependency vào Redis cho MVP.
+
+---
+
+## 2. 🗄️ PHÂN TÍCH THAY ĐỔI SCHEMA ([schema.ts](file:///d:/Code/project/glucare-api/src/database/schema.ts))
+
+### 2.1. Cập nhật Bảng `users` 
+
+**Hiện tại:**
+```typescript
+// Trường cũ cần thay thế:
+isActive: boolean('is_active').default(true),
+// THIẾU: deletedAt
+```
+
+**Thay đổi:**
+```diff
++ // Thêm enum mới
++ export const userStatusEnum = pgEnum('user_status', ['PENDING', 'ACTIVE', 'BLOCKED']);
+
+// Trong bảng users:
+- isActive: boolean('is_active').default(true),
++ status: userStatusEnum('status').default('ACTIVE').notNull(),
++ deletedAt: timestamp('deleted_at'),
+```
+
+> [!WARNING]
+> **Breaking Change:** Trường `isActive` (boolean) sẽ được thay thế bằng `status` (enum: PENDING/ACTIVE/BLOCKED). Cần cập nhật **TẤT CẢ** các file đang tham chiếu `isActive`:
+> - [admin.repository.ts](file:///d:/Code/project/glucare-api/src/modules/admin/admin.repository.ts) (filter, verifyDoctor)
+> - [admin.service.ts](file:///d:/Code/project/glucare-api/src/modules/admin/admin.service.ts) (updateUserStatus, verifyDoctor)
+> - [admin.controller.ts](file:///d:/Code/project/glucare-api/src/modules/admin/admin.controller.ts)
+> - [dto/update-user-status.dto.ts](file:///d:/Code/project/glucare-api/src/modules/admin/dto/update-user-status.dto.ts)
+> - [dto/user-filter.dto.ts](file:///d:/Code/project/glucare-api/src/modules/admin/dto/user-filter.dto.ts)  
+> - [seed.ts](file:///d:/Code/project/glucare-api/src/database/seed.ts) (thay `isActive: true` → `status: 'ACTIVE'`)
+> - `auth` module (login check)
+
+### 2.2. Bảng mới: `categories`
+
+```typescript
+export const categories = pgTable('categories', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull().unique(),
+  description: text('description'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  deletedAt: timestamp('deleted_at'),
+});
+```
+
+### 2.3. Cập nhật Bảng `knowledge_articles` (E-12)
+
+**Hiện tại (thiếu nhiều trường):**
+```typescript
+// CHỈ CÓ: id, title, content, category (text), thumbnailUrl, isPublished, createdAt
+```
+
+**Thay đổi:**
+```diff
++ export const articleLanguageEnum = pgEnum('article_language', ['VI', 'EN']);
+
+export const knowledgeArticles = pgTable('knowledge_articles', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  title: text('title').notNull(),
+  content: text('content').notNull(),
+- category: text('category'),
++ categoryId: uuid('category_id').references(() => categories.id).notNull(),
+  thumbnailUrl: text('thumbnail_url'),
+- isPublished: boolean('is_published').default(false),
+- createdAt: timestamp('created_at').defaultNow(),
++ language: articleLanguageEnum('language').notNull(),
++ isPublished: boolean('is_published').default(false).notNull(),
++ viewCount: integer('view_count').default(0).notNull(),
++ createdAt: timestamp('created_at').defaultNow().notNull(),
++ updatedAt: timestamp('updated_at').defaultNow().notNull(),
++ deletedAt: timestamp('deleted_at'),
+});
+```
+
+### 2.4. Bảng mới: `system_configs`
+
+```typescript
+export const systemConfigKeyEnum = pgEnum('system_config_key', [
+  'GLUCOSE_SAFE_MIN',
+  'GLUCOSE_SAFE_MAX',
+]);
+
+export const systemConfigs = pgTable('system_configs', {
+  key: systemConfigKeyEnum('key').primaryKey(),
+  value: jsonb('value').notNull(),
+  description: text('description'),
+  updatedBy: uuid('updated_by').references(() => users.id),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+```
+
+### 2.5. Bảng mới: `ai_usage_logs`
+
+```typescript
+export const aiFeatureEnum = pgEnum('ai_feature', ['VOICE', 'OCR']);
+export const aiRequestStatusEnum = pgEnum('ai_request_status', ['SUCCESS', 'FAILED']);
+
+export const aiUsageLogs = pgTable('ai_usage_logs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').references(() => users.id).notNull(),
+  feature: aiFeatureEnum('feature').notNull(),
+  status: aiRequestStatusEnum('status').notNull(),
+  errorMessage: text('error_message'),
+  durationMs: integer('duration_ms'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+```
+
+### 2.6. Relations mới cần thêm
+
+```typescript
+// categories <-> knowledgeArticles
+export const categoriesRelations = relations(categories, ({ many }) => ({
+  articles: many(knowledgeArticles),
+}));
+
+export const knowledgeArticlesRelations = relations(knowledgeArticles, ({ one }) => ({
+  category: one(categories, {
+    fields: [knowledgeArticles.categoryId],
+    references: [categories.id],
+  }),
+}));
+
+// ai_usage_logs <-> users
+export const aiUsageLogsRelations = relations(aiUsageLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [aiUsageLogs.userId],
+    references: [users.id],
+  }),
+}));
+```
+
+---
+
+## 3. 🏗️ CẤU TRÚC MODULE MỚI
+
+```
+src/modules/admin/
+├── admin.module.ts              ← Cập nhật (orchestrator cho sub-modules)
+├── admin.controller.ts          ← Cập nhật (Account Management)
+├── admin.service.ts             ← Cập nhật (Account Management)
+├── admin.repository.ts          ← Cập nhật (Account Management)
+├── dto/
+│   ├── update-user-status.dto.ts  ← Đổi từ isActive sang status enum
+│   └── user-filter.dto.ts         ← Thêm search, status filter
+│
+src/modules/system-config/
+├── system-config.module.ts
+├── system-config.controller.ts
+├── system-config.service.ts
+├── system-config.repository.ts
+├── dto/
+│   └── update-config.dto.ts
+├── interfaces/
+│   └── system-config.interface.ts
+│
+src/modules/blog/
+├── blog.module.ts
+├── controllers/
+│   ├── category.controller.ts     (ADMIN)
+│   ├── article-admin.controller.ts (ADMIN)
+│   └── article-patient.controller.ts (PATIENT)
+├── services/
+│   ├── category.service.ts
+│   ├── article-admin.service.ts
+│   └── article-patient.service.ts
+├── repositories/
+│   ├── category.repository.ts
+│   └── article.repository.ts
+├── dto/
+│   ├── create-category.dto.ts
+│   ├── update-category.dto.ts
+│   ├── category-filter.dto.ts
+│   ├── create-article.dto.ts
+│   ├── update-article.dto.ts
+│   ├── admin-article-filter.dto.ts
+│   ├── patient-article-filter.dto.ts
+│   └── publish-article.dto.ts
+├── interfaces/
+│   └── article.interface.ts
+│
+src/modules/dashboard/
+├── dashboard.module.ts
+├── dashboard.controller.ts
+├── services/
+│   ├── dashboard.service.ts       (Read from cache)
+│   └── dashboard-cron.service.ts  (Cronjob aggregator)
+├── dashboard.repository.ts
+├── dto/
+│   └── dashboard-overview.dto.ts
+├── interfaces/
+│   └── dashboard.interface.ts
+```
+
+---
+
+## 4. 🔄 REFACTORING BẮT BUỘC
+
+### Xóa hardcode ADA Standard trong Glucose Analytics
+
+| File | Dòng | Hardcode | Thay bằng |
+|------|------|----------|-----------|
+| [glucose-analytics.service.ts](file:///d:/Code/project/glucare-api/src/modules/glucose/services/glucose-analytics.service.ts#L18) | 18, 20, 52, 53 | `70`, `180` | `systemConfigService.getConfigValue('GLUCOSE_SAFE_MIN/MAX')` |
+| [glucose-dashboard.service.ts](file:///d:/Code/project/glucare-api/src/modules/glucose/services/glucose-dashboard.service.ts#L74-76) | 74-76 | `70`, `180`, `250` | `systemConfigService.getConfigValue(...)` |
+
+> [!NOTE]
+> Cần inject `SystemConfigService` vào `GlucoseModule`. Phương thức [calculateTIR](file:///d:/Code/project/glucare-api/src/modules/glucose/services/glucose-analytics.service.ts#6-34) và [determineStatus](file:///d:/Code/project/glucare-api/src/modules/glucose/services/glucose-analytics.service.ts#51-56) sẽ chuyển từ **synchronous** sang **asynchronous** (trả về `Promise`).
+
+---
+
+## 5. 📋 THỨ TỰ THỰC THI
+
+| Bước | Mô tả | Dependencies |
+|------|-------|--------------|
+| **1** | Cài thư viện (`pnpm add`) | Không |
+| **2** | Cập nhật [schema.ts](file:///d:/Code/project/glucare-api/src/database/schema.ts) + [seed.ts](file:///d:/Code/project/glucare-api/src/database/seed.ts) | Bước 1 |
+| **3** | Account Management (Refactor admin module) | Bước 2 |
+| **4** | System Config Module + Refactor hardcode glucose | Bước 2 |
+| **5** | Blog & Knowledge Base Module | Bước 2 |
+| **6** | Admin Dashboard Module (Cronjob + Cache) | Bước 2, 4 |
+| **7** | Unit Tests cho tất cả modules | Bước 3-6 |
+| **8** | Lưu context vào `.brv/context-tree/` | Bước 7 |
+
+---
+
+## ⚠️ RỦI RO & LƯU Ý
+
+1. **Migration `isActive` → `status`**: Đây là breaking change. Cần cập nhật seed data và toàn bộ logic auth (login check `isActive` → check `status !== 'BLOCKED'`).
+2. **`knowledge_articles` restructure**: Bảng cũ có `category: text`, bảng mới dùng FK `categoryId`. Cần migration hoặc `db:push`.
+3. **Cache-manager v6**: API khác v5 (`get/set` interface thay đổi). Cần dùng đúng API mới.
+4. **Firebase Admin SDK**: Đã có trong dependencies, dùng luôn cho upload thumbnail.
+
+---
+
+**Xác nhận của bạn cần thiết trước khi tôi bắt đầu sinh code. Bạn có muốn điều chỉnh gì trong kế hoạch trên không?**

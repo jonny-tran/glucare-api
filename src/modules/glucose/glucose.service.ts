@@ -58,7 +58,7 @@ export class GlucoseService {
     // Cast Drizzle result to IGlucoseReading[] for Analytics service
     const safeReadings = readings as unknown as IGlucoseReading[];
 
-    const tirStats = this.analyticsService.calculateTIR(safeReadings);
+    const tirStats = await this.analyticsService.calculateTIR(safeReadings);
     const hba1c = this.analyticsService.estimateHbA1c(safeReadings);
 
     // BR-09: Sparse data check for analytics response

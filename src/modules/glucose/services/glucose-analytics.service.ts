@@ -1,13 +1,29 @@
 import { Injectable } from '@nestjs/common';
+import { SystemConfigKey } from 'src/modules/system-config/interfaces/system-config.interface';
+import { SystemConfigService } from 'src/modules/system-config/system-config.service';
 import { IGlucoseReading } from '../interfaces/glucose.interface';
 
 @Injectable()
 export class GlucoseAnalyticsService {
-  calculateTIR(readings: IGlucoseReading[]) {
+  constructor(private readonly systemConfigService: SystemConfigService) {}
+
+  async calculateTIR(readings: IGlucoseReading[]) {
     // BR-09: Check sufficient data is handled at service level
     if (!readings.length) {
       return { tir: 0, tbr: 0, tar: 0 };
     }
+
+    // Lấy ngưỡng từ SystemConfig (thay vì hardcode 70/180)
+    const safeMin = Number(
+      await this.systemConfigService.getConfigValue(
+        SystemConfigKey.GLUCOSE_SAFE_MIN,
+      ),
+    );
+    const safeMax = Number(
+      await this.systemConfigService.getConfigValue(
+        SystemConfigKey.GLUCOSE_SAFE_MAX,
+      ),
+    );
 
     let inRange = 0;
     let belowRange = 0;
@@ -15,9 +31,9 @@ export class GlucoseAnalyticsService {
 
     for (const reading of readings) {
       const glucose = parseFloat(reading.glucoseValue);
-      if (glucose < 70) {
+      if (glucose < safeMin) {
         belowRange++;
-      } else if (glucose > 180) {
+      } else if (glucose > safeMax) {
         aboveRange++;
       } else {
         inRange++;
@@ -48,9 +64,22 @@ export class GlucoseAnalyticsService {
     return parseFloat(hba1c.toFixed(1)); // Usually 1 decimal place
   }
 
-  determineStatus(glucoseValue: number): 'NORMAL' | 'LOW' | 'HIGH' {
-    if (glucoseValue < 70) return 'LOW';
-    if (glucoseValue > 180) return 'HIGH';
+  async determineStatus(
+    glucoseValue: number,
+  ): Promise<'NORMAL' | 'LOW' | 'HIGH'> {
+    const safeMin = Number(
+      await this.systemConfigService.getConfigValue(
+        SystemConfigKey.GLUCOSE_SAFE_MIN,
+      ),
+    );
+    const safeMax = Number(
+      await this.systemConfigService.getConfigValue(
+        SystemConfigKey.GLUCOSE_SAFE_MAX,
+      ),
+    );
+
+    if (glucoseValue < safeMin) return 'LOW';
+    if (glucoseValue > safeMax) return 'HIGH';
     return 'NORMAL';
   }
 }

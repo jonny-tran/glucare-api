@@ -1,10 +1,15 @@
 import { Injectable } from '@nestjs/common';
+import { SystemConfigKey } from 'src/modules/system-config/interfaces/system-config.interface';
+import { SystemConfigService } from 'src/modules/system-config/system-config.service';
 import { GlucoseRepository } from '../glucose.repository';
 import { IDashboardData } from '../interfaces/dashboard.interface';
 
 @Injectable()
 export class GlucoseDashboardService {
-  constructor(private readonly glucoseRepository: GlucoseRepository) {}
+  constructor(
+    private readonly glucoseRepository: GlucoseRepository,
+    private readonly systemConfigService: SystemConfigService,
+  ) {}
 
   async getDashboardData(userId: string): Promise<IDashboardData> {
     const latestReading = await this.glucoseRepository.findLatest(userId);
@@ -19,9 +24,6 @@ export class GlucoseDashboardService {
     ]);
 
     // Trend: Compare current 24h vs previous 24h
-    // "Current 24h" usually means "last 24 hours" or "today". Let's assume "Today" vs "Yesterday" for simplicity, or "Last 24h" per spec?
-    // "Average of current 24h vs. previous 24h". Usually better to mean Today vs Yesterday as user sees "Today's Avg".
-    // I will use Today vs Yesterday.
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayAvg = await this.glucoseRepository.calculateAverage(
@@ -44,10 +46,10 @@ export class GlucoseDashboardService {
         value: parseFloat(r.glucoseValue),
         recordedAt: r.recordedAt,
       }))
-      .reverse(); // Chronological order for chart? Usually sparkline is time series.
+      .reverse(); // Chronological order for chart
 
     const statusLabel = latestReading
-      ? this.getStatusLabel(parseFloat(latestReading.glucoseValue))
+      ? await this.getStatusLabel(parseFloat(latestReading.glucoseValue))
       : '';
 
     return {
@@ -63,17 +65,28 @@ export class GlucoseDashboardService {
       daySummary: {
         average: todayAvg ? parseFloat(todayAvg.toFixed(1)) : null,
         totalReadings: todayCount,
-        target: 4, // From requirements or constant
+        target: 4,
       },
       trend,
       sparkline,
     };
   }
 
-  private getStatusLabel(value: number): string {
-    if (value < 70) return 'Thấp'; // Low
-    if (value >= 70 && value <= 180) return 'Bình thường'; // Normal
-    if (value > 180 && value <= 250) return 'Cao'; // High
-    return 'Nguy hiểm'; // Dangerous (Very High)
+  private async getStatusLabel(value: number): Promise<string> {
+    const safeMin = Number(
+      await this.systemConfigService.getConfigValue(
+        SystemConfigKey.GLUCOSE_SAFE_MIN,
+      ),
+    );
+    const safeMax = Number(
+      await this.systemConfigService.getConfigValue(
+        SystemConfigKey.GLUCOSE_SAFE_MAX,
+      ),
+    );
+
+    if (value < safeMin) return 'Thấp';
+    if (value >= safeMin && value <= safeMax) return 'Bình thường';
+    if (value > safeMax && value <= safeMax + 70) return 'Cao'; // Approximately +70 for "High" zone
+    return 'Nguy hiểm';
   }
 }

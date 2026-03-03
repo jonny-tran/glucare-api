@@ -50,6 +50,13 @@
       "when": 1771675698801,
       "tag": "0006_milky_phil_sheldon",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1772435864613,
+      "tag": "0007_sparkling_magma",
+      "breakpoints": true
     }
   ]
 }

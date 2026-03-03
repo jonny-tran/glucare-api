@@ -1,7 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, desc, eq, SQL } from 'drizzle-orm';
+import { and, count, desc, eq, ilike, isNull, or, SQL } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { IPaginatedResponse } from 'src/common/interfaces/pagination.interface';
 import { DATABASE_CONNECTION } from 'src/database/database.module';
 import * as schema from 'src/database/schema';
 import { UserRole } from 'src/database/schema';
@@ -14,18 +13,42 @@ export class AdminRepository {
     private readonly db: NodePgDatabase<typeof schema>,
   ) {}
 
-  async findAllUsers(
-    query: UserFilterDto,
-  ): Promise<IPaginatedResponse<typeof schema.users.$inferSelect>> {
-    const { page = 1, limit = 10, role, isActive } = query;
+  async findAllUsers(query: UserFilterDto) {
+    const {
+      page = 1,
+      limit = 10,
+      role,
+      status,
+      search,
+      includeDeleted,
+    } = query;
     const offset = (page - 1) * limit;
 
     const baseConditions: SQL[] = [];
+
+    // Filter by role
     if (role) {
       baseConditions.push(eq(schema.users.role, role));
     }
-    if (isActive !== undefined) {
-      baseConditions.push(eq(schema.users.isActive, isActive));
+
+    // Filter by status
+    if (status) {
+      baseConditions.push(eq(schema.users.status, status));
+    }
+
+    // Search by name or email
+    if (search) {
+      baseConditions.push(
+        or(
+          ilike(schema.users.fullName, `%${search}%`),
+          ilike(schema.users.email, `%${search}%`),
+        )!,
+      );
+    }
+
+    // Soft delete filter (exclude deleted users by default)
+    if (!includeDeleted) {
+      baseConditions.push(isNull(schema.users.deletedAt));
     }
 
     const whereClause =
@@ -41,6 +64,10 @@ export class AdminRepository {
       limit,
       offset,
       orderBy: [desc(schema.users.createdAt)],
+      columns: {
+        password: false,
+        hashedRefreshToken: false,
+      },
     });
 
     return {
@@ -56,36 +83,80 @@ export class AdminRepository {
 
   async findUserById(id: string) {
     return this.db.query.users.findFirst({
-      where: eq(schema.users.id, id),
+      where: and(eq(schema.users.id, id), isNull(schema.users.deletedAt)),
+      columns: {
+        password: false,
+        hashedRefreshToken: false,
+      },
     });
   }
 
-  async updateUserStatus(id: string, isActive: boolean) {
+  async updateUserStatus(id: string, status: 'ACTIVE' | 'BLOCKED') {
     const [updated] = await this.db
       .update(schema.users)
-      .set({ isActive, updatedAt: new Date() })
+      .set({
+        status,
+        // Clear refresh token when blocking to invalidate sessions
+        ...(status === 'BLOCKED' ? { hashedRefreshToken: null } : {}),
+        updatedAt: new Date(),
+      })
       .where(eq(schema.users.id, id))
-      .returning();
+      .returning({
+        id: schema.users.id,
+        email: schema.users.email,
+        fullName: schema.users.fullName,
+        role: schema.users.role,
+        status: schema.users.status,
+        updatedAt: schema.users.updatedAt,
+      });
     return updated;
+  }
+
+  async softDeleteUser(userId: string) {
+    const [deleted] = await this.db
+      .update(schema.users)
+      .set({
+        deletedAt: new Date(),
+        hashedRefreshToken: null,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(schema.users.id, userId), isNull(schema.users.deletedAt)))
+      .returning({
+        id: schema.users.id,
+        email: schema.users.email,
+        fullName: schema.users.fullName,
+        deletedAt: schema.users.deletedAt,
+      });
+    return deleted;
   }
 
   async findPendingDoctors(): Promise<
     {
       doctor: typeof schema.doctors.$inferSelect;
-      user: typeof schema.users.$inferSelect;
+      user: Pick<
+        typeof schema.users.$inferSelect,
+        'id' | 'email' | 'fullName' | 'phoneNumber' | 'status'
+      >;
     }[]
   > {
     return this.db
       .select({
         doctor: schema.doctors,
-        user: schema.users,
+        user: {
+          id: schema.users.id,
+          email: schema.users.email,
+          fullName: schema.users.fullName,
+          phoneNumber: schema.users.phoneNumber,
+          status: schema.users.status,
+        },
       })
       .from(schema.doctors)
       .innerJoin(schema.users, eq(schema.doctors.userId, schema.users.id))
       .where(
         and(
-          eq(schema.users.isActive, false),
+          eq(schema.users.status, 'PENDING'),
           eq(schema.users.role, UserRole.DOCTOR),
+          isNull(schema.users.deletedAt),
         ),
       );
   }
@@ -94,7 +165,12 @@ export class AdminRepository {
     return this.db.query.doctors.findFirst({
       where: eq(schema.doctors.id, id),
       with: {
-        user: true,
+        user: {
+          columns: {
+            password: false,
+            hashedRefreshToken: false,
+          },
+        },
       },
     });
   }
@@ -103,9 +179,15 @@ export class AdminRepository {
     return this.db.transaction(async (tx) => {
       const [updatedUser] = await tx
         .update(schema.users)
-        .set({ isActive: true, updatedAt: new Date() })
+        .set({ status: 'ACTIVE', updatedAt: new Date() })
         .where(eq(schema.users.id, userId))
-        .returning();
+        .returning({
+          id: schema.users.id,
+          email: schema.users.email,
+          fullName: schema.users.fullName,
+          role: schema.users.role,
+          status: schema.users.status,
+        });
       return updatedUser;
     });
   }

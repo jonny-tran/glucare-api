@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsBoolean, IsEnum, IsOptional } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { UserRole } from 'src/database/schema';
 
@@ -14,14 +14,29 @@ export class UserFilterDto extends PaginationQueryDto {
   role?: UserRole;
 
   @ApiPropertyOptional({
-    description: 'Lọc theo trạng thái hoạt động của tài khoản',
+    description: 'Lọc theo trạng thái tài khoản (PENDING, ACTIVE, BLOCKED)',
+    enum: ['PENDING', 'ACTIVE', 'BLOCKED'],
   })
   @IsOptional()
-  @Transform(({ value }) => {
-    if (value === 'true') return true;
-    if (value === 'false') return false;
-    return Boolean(value);
+  @IsEnum(['PENDING', 'ACTIVE', 'BLOCKED'], {
+    message: 'Trạng thái không hợp lệ',
   })
-  @IsBoolean({ message: 'Trạng thái hoạt động phải là kiểu boolean' })
-  isActive?: boolean;
+  status?: 'PENDING' | 'ACTIVE' | 'BLOCKED';
+
+  @ApiPropertyOptional({
+    description: 'Tìm kiếm theo tên hoặc email',
+    example: 'Nguyen',
+  })
+  @IsOptional()
+  @IsString({ message: 'Từ khóa tìm kiếm phải là chuỗi ký tự' })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  search?: string;
+
+  @ApiPropertyOptional({
+    description: 'Bao gồm tài khoản đã xóa mềm',
+    default: false,
+  })
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  includeDeleted?: boolean;
 }

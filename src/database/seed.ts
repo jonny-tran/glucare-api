@@ -31,6 +31,10 @@ async function main() {
   try {
     // Clean up
     console.log('🧹 Cleaning existing data...');
+    await db.delete(schema.aiUsageLogs);
+    await db.delete(schema.systemConfigs);
+    await db.delete(schema.knowledgeArticles);
+    await db.delete(schema.categories);
     await db.delete(schema.patientDoctors);
     await db.delete(schema.doctors);
     await db.delete(schema.patients);
@@ -41,7 +45,7 @@ async function main() {
       email: emailAdmin,
       password: hashedPassword,
       role: 'ADMIN',
-      isActive: true,
+      status: 'ACTIVE',
     });
 
     console.log('Creating Doctors...');
@@ -55,7 +59,7 @@ async function main() {
         password: hashedPassword,
         role: 'DOCTOR',
         fullName: 'Dr. Strange',
-        isActive: true,
+        status: 'ACTIVE',
       })
       .returning({ id: schema.users.id });
 
@@ -73,7 +77,7 @@ async function main() {
         password: hashedPassword,
         role: 'DOCTOR',
         fullName: 'Dr. House',
-        isActive: true,
+        status: 'ACTIVE',
       })
       .returning({ id: schema.users.id });
 
@@ -99,7 +103,7 @@ async function main() {
         password: hashedPassword,
         role: 'PATIENT',
         fullName: 'Nguyen Van A',
-        isActive: true,
+        status: 'ACTIVE',
       })
       .returning({ id: schema.users.id });
 
@@ -120,7 +124,7 @@ async function main() {
         password: hashedPassword,
         role: 'PATIENT',
         fullName: 'Tran Thi B',
-        isActive: true,
+        status: 'ACTIVE',
       })
       .returning({ id: schema.users.id });
 
@@ -141,7 +145,7 @@ async function main() {
         password: hashedPassword,
         role: 'PATIENT',
         fullName: 'Le Van C',
-        isActive: true,
+        status: 'ACTIVE',
       })
       .returning({ id: schema.users.id });
 
@@ -165,6 +169,44 @@ async function main() {
       patientId: pat2Profile.id,
       status: 'PENDING',
     });
+
+    // --- Seed System Configs (Medical Standards) ---
+    console.log('⚙️ Seeding System Configs (ADA Standards)...');
+    await db.insert(schema.systemConfigs).values([
+      {
+        key: 'GLUCOSE_SAFE_MIN',
+        value: 70,
+        description:
+          'Ngưỡng đường huyết tối thiểu an toàn (mg/dL) theo tiêu chuẩn ADA',
+      },
+      {
+        key: 'GLUCOSE_SAFE_MAX',
+        value: 180,
+        description:
+          'Ngưỡng đường huyết tối đa an toàn (mg/dL) theo tiêu chuẩn ADA',
+      },
+    ]);
+
+    // --- Seed Categories for Knowledge Base ---
+    console.log('📚 Seeding Categories...');
+    await db.insert(schema.categories).values([
+      {
+        name: 'Kiến thức cơ bản',
+        description: 'Các bài viết cung cấp kiến thức nền tảng về tiểu đường',
+      },
+      {
+        name: 'Dinh dưỡng',
+        description: 'Chế độ ăn uống và dinh dưỡng cho bệnh nhân tiểu đường',
+      },
+      {
+        name: 'Tập luyện',
+        description: 'Hướng dẫn vận động và tập thể dục phù hợp',
+      },
+      {
+        name: 'Thuốc & Insulin',
+        description: 'Thông tin về thuốc và liệu pháp insulin',
+      },
+    ]);
 
     console.log('✅ Seeding completed successfully!');
     console.log(`🔑 Admin Email: ${emailAdmin}`);

@@ -54,6 +54,14 @@ describe('DoctorsService', () => {
     const mockMealsService = { findAll: jest.fn() };
     const mockMedicationsService = { findAll: jest.fn() };
 
+    const mockSystemConfigService = {
+      getConfigValue: jest.fn().mockImplementation(async (key: string) => {
+        if (key === 'GLUCOSE_SAFE_MIN') return 70;
+        if (key === 'GLUCOSE_SAFE_MAX') return 180;
+        return null;
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DoctorsService,
@@ -62,7 +70,10 @@ describe('DoctorsService', () => {
         { provide: GlucoseRepository, useValue: mockGlucoseRepo },
         {
           provide: GlucoseAnalyticsService,
-          useValue: new GlucoseAnalyticsService(),
+          useFactory: () =>
+            new GlucoseAnalyticsService(
+              mockSystemConfigService as unknown as import('../system-config/system-config.service').SystemConfigService,
+            ),
         },
         { provide: DoctorNotesRepository, useValue: mockDoctorNotesRepo },
         { provide: GlucoseService, useValue: mockGlucoseService },

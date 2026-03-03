@@ -3,7 +3,9 @@ import {
   boolean,
   date,
   decimal,
+  integer,
   json,
+  jsonb,
   pgEnum,
   pgTable,
   text,
@@ -20,6 +22,29 @@ export enum UserRole {
 }
 export const userRoleEnum = pgEnum('user_role', ['ADMIN', 'DOCTOR', 'PATIENT']);
 export const genderEnum = pgEnum('gender', ['M', 'F', 'O']);
+
+// Admin: User account status management
+export const userStatusEnum = pgEnum('user_status', [
+  'PENDING',
+  'ACTIVE',
+  'BLOCKED',
+]);
+
+// Blog: Article language
+export const articleLanguageEnum = pgEnum('article_language', ['VI', 'EN']);
+
+// SystemConfig: Key enum
+export const systemConfigKeyEnum = pgEnum('system_config_key', [
+  'GLUCOSE_SAFE_MIN',
+  'GLUCOSE_SAFE_MAX',
+]);
+
+// Dashboard: AI feature tracking
+export const aiFeatureEnum = pgEnum('ai_feature', ['VOICE', 'OCR']);
+export const aiRequestStatusEnum = pgEnum('ai_request_status', [
+  'SUCCESS',
+  'FAILED',
+]);
 export const diabetesTypeEnum = pgEnum('diabetes_type', ['GDM', 'T1D', 'T2D']);
 
 // E-03, E-10: Status kết nối
@@ -81,10 +106,11 @@ export const users = pgTable('users', {
   role: userRoleEnum('role').default('PATIENT').notNull(),
   fullName: text('full_name'),
   avatarUrl: text('avatar_url'),
-  isActive: boolean('is_active').default(true),
+  status: userStatusEnum('status').default('ACTIVE').notNull(),
   hashedRefreshToken: text('hashed_refresh_token'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
+  deletedAt: timestamp('deleted_at'),
 });
 
 // E-01 Extended Patient Profile
@@ -291,15 +317,55 @@ export const devices = pgTable('devices', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
-// E-12: Knowledge Articles
+// --- NEW: ADMIN TABLES ---
+
+// Categories (Blog/Knowledge Base)
+export const categories = pgTable('categories', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull().unique(),
+  description: text('description'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  deletedAt: timestamp('deleted_at'),
+});
+
+// E-12: Knowledge Articles (Revamped with FK to categories)
 export const knowledgeArticles = pgTable('knowledge_articles', {
   id: uuid('id').defaultRandom().primaryKey(),
   title: text('title').notNull(),
   content: text('content').notNull(),
-  category: text('category'),
+  categoryId: uuid('category_id')
+    .references(() => categories.id)
+    .notNull(),
   thumbnailUrl: text('thumbnail_url'),
-  isPublished: boolean('is_published').default(false),
-  createdAt: timestamp('created_at').defaultNow(),
+  language: articleLanguageEnum('language').notNull(),
+  isPublished: boolean('is_published').default(false).notNull(),
+  viewCount: integer('view_count').default(0).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  deletedAt: timestamp('deleted_at'),
+});
+
+// System Configs (Key-Value Store for medical standards)
+export const systemConfigs = pgTable('system_configs', {
+  key: systemConfigKeyEnum('key').primaryKey(),
+  value: jsonb('value').notNull(),
+  description: text('description'),
+  updatedBy: uuid('updated_by').references(() => users.id),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// AI Usage Logs (Dashboard tracking)
+export const aiUsageLogs = pgTable('ai_usage_logs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => users.id)
+    .notNull(),
+  feature: aiFeatureEnum('feature').notNull(),
+  status: aiRequestStatusEnum('status').notNull(),
+  errorMessage: text('error_message'),
+  durationMs: integer('duration_ms'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
 // E-13: ChatSession
@@ -324,6 +390,30 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   medications: many(medications),
   reminders: many(reminders),
   notificationTokens: many(notificationTokens),
+  aiUsageLogs: many(aiUsageLogs),
+}));
+
+// Categories <-> Articles
+export const categoriesRelations = relations(categories, ({ many }) => ({
+  articles: many(knowledgeArticles),
+}));
+
+export const knowledgeArticlesRelations = relations(
+  knowledgeArticles,
+  ({ one }) => ({
+    category: one(categories, {
+      fields: [knowledgeArticles.categoryId],
+      references: [categories.id],
+    }),
+  }),
+);
+
+// AI Usage Logs
+export const aiUsageLogsRelations = relations(aiUsageLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [aiUsageLogs.userId],
+    references: [users.id],
+  }),
 }));
 
 export const doctorsRelations = relations(doctors, ({ one, many }) => ({

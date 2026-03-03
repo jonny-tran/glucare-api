@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from 'src/database/database.module';
+import { SystemConfigModule } from 'src/modules/system-config/system-config.module';
 import { GlucoseController } from './glucose.controller';
 import { GlucoseRepository } from './glucose.repository';
 import { GlucoseService } from './glucose.service';
@@ -9,7 +10,7 @@ import { GlucoseReportService } from './services/glucose-report.service';
 import { GlucoseStorageService } from './services/glucose-storage.service';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, SystemConfigModule],
   controllers: [GlucoseController],
   providers: [
     GlucoseService,
