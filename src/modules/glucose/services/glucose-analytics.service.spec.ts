@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { SystemConfigKey } from 'src/modules/system-config/interfaces/system-config.interface';
-import { SystemConfigService } from 'src/modules/system-config/system-config.service';
 import { IGlucoseReading } from '../interfaces/glucose.interface';
 import { GlucoseAnalyticsService } from './glucose-analytics.service';
+import { SystemConfigService } from '../../system-config/system-config.service';
+import { SystemConfigKey } from '../../system-config/interfaces/system-config.interface';
 
 describe('GlucoseAnalyticsService', () => {
   let service: GlucoseAnalyticsService;

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { SystemConfigKey } from 'src/modules/system-config/interfaces/system-config.interface';
-import { SystemConfigService } from 'src/modules/system-config/system-config.service';
+import { SystemConfigKey } from '../../system-config/interfaces/system-config.interface';
+import { SystemConfigService } from '../../system-config/system-config.service';
 import { IGlucoseReading } from '../interfaces/glucose.interface';
 
 @Injectable()
