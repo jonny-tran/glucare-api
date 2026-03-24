@@ -7,7 +7,7 @@ import {
   IsString,
   IsUUID,
 } from 'class-validator';
-import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
+import { PaginationQueryDto } from '../../../common/dto/pagination-query.dto';
 
 export class AdminArticleFilterDto extends PaginationQueryDto {
   @ApiPropertyOptional({ description: 'Tìm kiếm theo tiêu đề' })

@@ -1,6 +1,6 @@
 import { ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { IsDateString, IsOptional, IsString } from 'class-validator';
-import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
+import { PaginationQueryDto } from '../../../common/dto/pagination-query.dto';
 import { CreateMedicationDto } from './create-medication.dto';
 
 export class UpdateMedicationDto extends PartialType(CreateMedicationDto) {}

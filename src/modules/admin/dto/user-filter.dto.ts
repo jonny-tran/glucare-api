@@ -1,8 +1,8 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
-import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
-import { UserRole } from 'src/database/schema';
+import { PaginationQueryDto } from '../../../common/dto/pagination-query.dto';
+import { UserRole } from '../../../database/schema';
 
 export class UserFilterDto extends PaginationQueryDto {
   @ApiPropertyOptional({
