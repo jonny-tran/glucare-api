@@ -1,6 +1,7 @@
 import { relations } from 'drizzle-orm';
 import {
   boolean,
+  customType,
   date,
   decimal,
   integer,
@@ -12,7 +13,22 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
+  varchar,
 } from 'drizzle-orm/pg-core';
+
+/** E-12 RAG: Gemini text-embedding-004 (pgvector), mặc định 768 chiều */
+export const KNOWLEDGE_EMBEDDING_DIMENSION = 768 as const;
+
+/**
+ * PostgreSQL type `vector` comes from extension **pgvector**.
+ * Run `CREATE EXTENSION IF NOT EXISTS vector` before first `ALTER` on this column
+ * (use `pnpm db:ensure-pgvector` or `pnpm db:push`, which runs it automatically).
+ */
+const vectorEmbedding = customType<{ data: number[]; driverData: string }>({
+  dataType() {
+    return `vector(${KNOWLEDGE_EMBEDDING_DIMENSION})`;
+  },
+});
 
 // --- 1. ENUMS DEFINITION (Source of Truth) ---
 export enum UserRole {
@@ -94,6 +110,12 @@ export const reminderTypeEnum = pgEnum('reminder_type', [
 // E-13: Chat Session
 export const sessionTypeEnum = pgEnum('session_type', ['AI', 'Doctor']);
 export const chatStatusEnum = pgEnum('chat_status', ['Active', 'Closed']);
+export const chatMessageRoleEnum = pgEnum('chat_message_role', [
+  'user',
+  'assistant',
+  'system',
+  'tool',
+]);
 
 // E-07: Exercise
 export const intensityLevelEnum = pgEnum('intensity_level', [
@@ -356,6 +378,8 @@ export const knowledgeArticles = pgTable('knowledge_articles', {
   language: articleLanguageEnum('language').notNull(),
   isPublished: boolean('is_published').default(false).notNull(),
   viewCount: integer('view_count').default(0).notNull(),
+  /** Semantic search (pgvector); null until backfilled */
+  embedding: vectorEmbedding('embedding'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
   deletedAt: timestamp('deleted_at'),
@@ -391,7 +415,25 @@ export const chatSessions = pgTable('chat_sessions', {
     .notNull(),
   sessionType: sessionTypeEnum('session_type').notNull(),
   status: chatStatusEnum('status').default('Active').notNull(),
+  summary: text('summary'),
+  context: jsonb('context').$type<Record<string, unknown>>(),
+  title: varchar('title', { length: 255 })
+    .notNull()
+    .default('Cuộc trò chuyện mới'),
+  isDeleted: boolean('is_deleted').notNull().default(false),
   createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const chatMessages = pgTable('chat_messages', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  sessionId: uuid('session_id')
+    .references(() => chatSessions.id, { onDelete: 'cascade' })
+    .notNull(),
+  role: chatMessageRoleEnum('role').notNull(),
+  content: text('content').notNull(),
+  metadata: jsonb('metadata').$type<Record<string, unknown>>(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
 // --- 6. EXERCISES & APPOINTMENTS ---
@@ -528,10 +570,18 @@ export const healthReportsRelations = relations(healthReports, ({ one }) => ({
   }),
 }));
 
-export const chatSessionsRelations = relations(chatSessions, ({ one }) => ({
+export const chatSessionsRelations = relations(chatSessions, ({ one, many }) => ({
   user: one(users, {
     fields: [chatSessions.userId],
     references: [users.id],
+  }),
+  messages: many(chatMessages),
+}));
+
+export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
+  session: one(chatSessions, {
+    fields: [chatMessages.sessionId],
+    references: [chatSessions.id],
   }),
 }));
 

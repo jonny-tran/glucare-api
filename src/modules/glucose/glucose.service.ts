@@ -40,6 +40,11 @@ export class GlucoseService {
     return this.storageService.findAll(userId, query);
   }
 
+  /** Lần đo gần nhất (E-04), dùng cho double-check nhập liệu đa phương tiện. */
+  async getLatestReading(userId: string) {
+    return this.storageService.findLatest(userId);
+  }
+
   async getDashboardData(userId: string) {
     return this.dashboardService.getDashboardData(userId);
   }

@@ -64,6 +64,48 @@
       "when": 1772548135462,
       "tag": "0008_workable_wild_child",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1775224856957,
+      "tag": "0009_typical_magneto",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1775227834741,
+      "tag": "0010_knowledge_embedding_pgvector",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1775300000000,
+      "tag": "0011_chat_sessions_management",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1775234875002,
+      "tag": "0012_same_boomerang",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1775310000000,
+      "tag": "0013_knowledge_embedding_dim_768",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1775236386451,
+      "tag": "0014_spicy_jazinda",
+      "breakpoints": true
     }
   ]
 }

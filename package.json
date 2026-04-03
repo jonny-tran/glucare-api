@@ -19,10 +19,13 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "db:generate": "drizzle-kit generate",
-    "db:push": "drizzle-kit push",
-    "db:seed": "tsx src/database/seed.ts"
+    "db:ensure-pgvector": "tsx src/database/ensure-pgvector.ts",
+    "db:push": "tsx src/database/ensure-pgvector.ts && drizzle-kit push",
+    "db:seed": "tsx src/database/seed.ts",
+    "db:embeddings": "tsx src/database/backfill-knowledge-embeddings.ts"
   },
   "dependencies": {
+    "@google/genai": "^1.48.0",
     "@neondatabase/serverless": "^1.0.2",
     "@nestjs/cache-manager": "^3.1.0",
     "@nestjs/common": "^11.0.1",
@@ -40,6 +43,7 @@
     "cache-manager": "^7.2.8",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.3",
+    "cloudinary": "^2.9.0",
     "date-fns-tz": "^3.2.0",
     "drizzle-orm": "^0.45.1",
     "eventemitter2": "^6.4.9",
@@ -49,7 +53,9 @@
     "pg": "^8.16.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "swagger-ui-express": "^5.0.1"
+    "streamifier": "^0.1.1",
+    "swagger-ui-express": "^5.0.1",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -59,9 +65,11 @@
     "@nestjs/testing": "^11.0.1",
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
+    "@types/multer": "^2.1.0",
     "@types/node": "^22.10.7",
     "@types/passport-jwt": "^4.0.1",
     "@types/pg": "^8.16.0",
+    "@types/streamifier": "^0.1.2",
     "@types/supertest": "^6.0.2",
     "dotenv": "^17.2.3",
     "drizzle-kit": "^0.31.8",

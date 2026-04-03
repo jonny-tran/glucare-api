@@ -19,6 +19,7 @@ import { MealsModule } from './modules/meals/meals.module';
 import { MedicationsModule } from './modules/medications/medications.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { SystemConfigModule } from './modules/system-config/system-config.module';
+import { AiModule } from './modules/ai/ai.module';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
@@ -49,6 +50,7 @@ import { UsersModule } from './modules/users/users.module';
     DataSharingModule,
     DoctorsModule,
     NotificationsModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [
