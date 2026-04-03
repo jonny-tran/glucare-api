@@ -10,8 +10,8 @@ import {
   sql,
 } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { DATABASE_CONNECTION } from 'src/database/database.module';
-import * as schema from 'src/database/schema';
+import { DATABASE_CONNECTION } from '../../database/database.module';
+import * as schema from '../../database/schema';
 
 export type KnowledgeArticleHit = {
   id: string;

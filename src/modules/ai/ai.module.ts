@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { GlucoseModule } from 'src/modules/glucose/glucose.module';
-import { MedicationsModule } from 'src/modules/medications/medications.module';
+import { GlucoseModule } from '../../modules/glucose/glucose.module';
+import { MedicationsModule } from '../../modules/medications/medications.module';
 import { AiController } from './ai.controller';
 import { AiSessionService } from './ai-session.service';
 import { AiSessionTitleService } from './ai-session-title.service';

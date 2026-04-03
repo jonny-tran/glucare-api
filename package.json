@@ -22,7 +22,12 @@
     "db:ensure-pgvector": "tsx src/database/ensure-pgvector.ts",
     "db:push": "tsx src/database/ensure-pgvector.ts && drizzle-kit push",
     "db:seed": "tsx src/database/seed.ts",
-    "db:embeddings": "tsx src/database/backfill-knowledge-embeddings.ts"
+    "db:embeddings": "tsx src/database/backfill-knowledge-embeddings.ts",
+    "db:seed:knowledge": "tsx src/database/knowledge-ai/seed-knowledge.ts",
+    "db:seed:knowledge-targets": "tsx src/database/knowledge-ai/seed-knowledge-targets.ts",
+    "db:seed:knowledge-emergency": "tsx src/database/knowledge-ai/seed-knowledge-emergency.ts",
+    "db:seed:knowledge-lifestyle": "tsx src/database/knowledge-ai/seed-knowledge-lifestyle.ts",
+    "db:seed:knowledge-med-dialog": "tsx src/database/knowledge-ai/seed-med-dialog.ts"
   },
   "dependencies": {
     "@google/genai": "^1.48.0",

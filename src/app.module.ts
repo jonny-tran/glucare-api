@@ -36,6 +36,7 @@ import { UsersModule } from './modules/users/users.module';
     DatabaseModule,
     EventEmitterModule.forRoot(),
     AdminModule,
+    AiModule,
     AppointmentsModule,
     AuthModule,
     BlogModule,
@@ -50,7 +51,6 @@ import { UsersModule } from './modules/users/users.module';
     DataSharingModule,
     DoctorsModule,
     NotificationsModule,
-    AiModule,
   ],
   controllers: [AppController],
   providers: [

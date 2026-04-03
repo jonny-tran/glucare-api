@@ -23,10 +23,10 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
-import { ResponseMessage } from 'src/common/decorators/response-message.decorator';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
+import { ResponseMessage } from '../../common/decorators/response-message.decorator';
 import { CurrentUser } from 'src/modules/auth/decorators/current-user.decorator';
-import { AtGuard } from 'src/modules/auth/guards/auth.guard';
+import { AtGuard } from '../../modules/auth/guards/auth.guard';
 import type { JwtPayload } from 'src/modules/auth/interfaces/auth.interface';
 import { AgentService } from './agent.service';
 import { AiSessionService } from './ai-session.service';

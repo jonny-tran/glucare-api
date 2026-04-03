@@ -1,4 +1,9 @@
-import { Injectable, ServiceUnavailableException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleInit,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenAI } from '@google/genai';
 
@@ -6,10 +11,20 @@ import { GoogleGenAI } from '@google/genai';
  * Client Google Gen AI SDK (@google/genai) — dùng GEMINI_API_KEY (hoặc GOOGLE_GENERATIVE_AI_API_KEY).
  */
 @Injectable()
-export class GeminiClientService {
+export class GeminiClientService implements OnModuleInit {
+  private readonly logger = new Logger(GeminiClientService.name);
+
   private client: GoogleGenAI | null = null;
 
   constructor(private readonly configService: ConfigService) {}
+
+  onModuleInit() {
+    const chatModel = this.getChatModelId();
+    const hasKey = !!this.tryGetApiKey();
+    this.logger.log(
+      `[Gemini] Chat / generateContent: model="${chatModel}" (biến môi trường AI_MODEL; mặc định gemini-2.0-flash). API key: ${hasKey ? 'đã cấu hình' : 'CHƯA có'}.`,
+    );
+  }
 
   /** Ưu tiên GEMINI_API_KEY theo tài liệu Google Gen AI. */
   getApiKey(): string {
@@ -36,6 +51,9 @@ export class GeminiClientService {
   getClient(): GoogleGenAI {
     if (!this.client) {
       this.client = new GoogleGenAI({ apiKey: this.getApiKey() });
+      this.logger.log(
+        `[Gemini] GoogleGenAI (chat) client tạo lần đầu — generateContent dùng model: "${this.getChatModelId()}"`,
+      );
     }
     return this.client;
   }
@@ -48,6 +66,9 @@ export class GeminiClientService {
     }
     if (!this.client) {
       this.client = new GoogleGenAI({ apiKey: k });
+      this.logger.log(
+        `[Gemini] GoogleGenAI (chat) client tạo lần đầu (tryGetClient) — model: "${this.getChatModelId()}"`,
+      );
     }
     return this.client;
   }

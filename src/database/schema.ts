@@ -16,7 +16,10 @@ import {
   varchar,
 } from 'drizzle-orm/pg-core';
 
-/** E-12 RAG: Gemini text-embedding-004 (pgvector), mặc định 768 chiều */
+/**
+ * E-12 RAG — kích thước cột `knowledge_articles.embedding` (pgvector).
+ * Khớp `outputDimensionality` khi gọi Gemini embedding (vd. gemini-embedding-001 cắt về 768).
+ */
 export const KNOWLEDGE_EMBEDDING_DIMENSION = 768 as const;
 
 /**

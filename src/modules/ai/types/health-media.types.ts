@@ -1,4 +1,4 @@
-import type { MealContext, ReadingType } from 'src/modules/glucose/dto/create-glucose.dto';
+import type { MealContext, ReadingType } from '../../../modules/glucose/dto/create-glucose.dto';
 
 /** Kết quả trích xuất từ giọng nói / OCR trước khi lưu E-04 */
 export type PendingGlucosePayload = {

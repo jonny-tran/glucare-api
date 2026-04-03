@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   ServiceUnavailableException,
 } from '@nestjs/common';
 import {
@@ -10,11 +11,11 @@ import {
   type Part,
   type Tool,
 } from '@google/genai';
-import { GlucoseFilterDto } from 'src/modules/glucose/dto/glucose-filter.dto';
-import { GlucoseService } from 'src/modules/glucose/glucose.service';
-import { MedicationFilterDto } from 'src/modules/medications/dto/medication-filter.dto';
-import { MedicationsService } from 'src/modules/medications/medications.service';
-import { JwtPayload } from 'src/modules/auth/interfaces/auth.interface';
+import { GlucoseFilterDto } from '../../modules/glucose/dto/glucose-filter.dto';
+import { GlucoseService } from '../../modules/glucose/glucose.service';
+import { MedicationFilterDto } from '../../modules/medications/dto/medication-filter.dto';
+import { MedicationsService } from '../../modules/medications/medications.service';
+import { JwtPayload } from '../../modules/auth/interfaces/auth.interface';
 import type { KnowledgeArticleHit } from './ai.repository';
 import { AiRepository } from './ai.repository';
 import { AiChatDto } from './dto/ai-chat.dto';
@@ -25,6 +26,10 @@ import { ToolsRegistryService } from './tools/tools-registry.service';
 import { MEDICAL_DISCLAIMER_AI } from './constants';
 import { AiSessionTitleService } from './ai-session-title.service';
 import { GeminiClientService } from './gemini-client.service';
+import {
+  GEMINI_MAINTENANCE_MESSAGE_VI,
+  isGeminiQuotaOrRateLimitError,
+} from './gemini-quota.util';
 import { buildAgentFunctionDeclarations } from './gemini-tool-declarations';
 import type { PendingGlucosePayload } from './types/health-media.types';
 
@@ -45,6 +50,8 @@ type PromptContext = {
 
 @Injectable()
 export class AgentService {
+  private readonly logger = new Logger(AgentService.name);
+
   constructor(
     private readonly glucoseService: GlucoseService,
     private readonly medicationsService: MedicationsService,
@@ -241,19 +248,29 @@ export class AgentService {
     const maxIterations = 15;
 
     while (iterations++ < maxIterations) {
-      const response = await ai.models.generateContent({
-        model,
-        contents: working,
-        config: {
-          systemInstruction,
-          tools,
-          toolConfig: {
-            functionCallingConfig: {
-              mode: FunctionCallingConfigMode.AUTO,
+      let response: Awaited<
+        ReturnType<typeof ai.models.generateContent>
+      >;
+      try {
+        response = await ai.models.generateContent({
+          model,
+          contents: working,
+          config: {
+            systemInstruction,
+            tools,
+            toolConfig: {
+              functionCallingConfig: {
+                mode: FunctionCallingConfigMode.AUTO,
+              },
             },
           },
-        },
-      });
+        });
+      } catch (e) {
+        if (isGeminiQuotaOrRateLimitError(e)) {
+          throw new ServiceUnavailableException(GEMINI_MAINTENANCE_MESSAGE_VI);
+        }
+        throw e;
+      }
 
       const calls = response.functionCalls;
       if (!calls?.length) {
@@ -510,28 +527,39 @@ export class AgentService {
 
     const ai = this.geminiClient.getClient();
     const model = this.geminiClient.getChatModelId();
-    const summaryRes = await ai.models.generateContent({
-      model,
-      contents: [
-        {
-          role: 'user',
-          parts: [
-            {
-              text: `User ID: ${userId}\n\nHội thoại:\n${convoText}`,
-            },
-          ],
+    let summaryRes: Awaited<ReturnType<typeof ai.models.generateContent>>;
+    try {
+      summaryRes = await ai.models.generateContent({
+        model,
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              {
+                text: `User ID: ${userId}\n\nHội thoại:\n${convoText}`,
+              },
+            ],
+          },
+        ],
+        config: {
+          systemInstruction: [
+            'Bạn tóm tắt hội thoại y tế cho trợ lý AI nội bộ.',
+            'Trả về 2 phần rõ ràng:',
+            '1) SUMMARY: tóm tắt ngắn bối cảnh và quyết định quan trọng.',
+            '2) FACTS: danh sách facts bền vững về người dùng dạng gạch đầu dòng.',
+            'Không thêm disclaimer.',
+          ].join('\n'),
         },
-      ],
-      config: {
-        systemInstruction: [
-          'Bạn tóm tắt hội thoại y tế cho trợ lý AI nội bộ.',
-          'Trả về 2 phần rõ ràng:',
-          '1) SUMMARY: tóm tắt ngắn bối cảnh và quyết định quan trọng.',
-          '2) FACTS: danh sách facts bền vững về người dùng dạng gạch đầu dòng.',
-          'Không thêm disclaimer.',
-        ].join('\n'),
-      },
-    });
+      });
+    } catch (e) {
+      if (isGeminiQuotaOrRateLimitError(e)) {
+        this.logger.warn(
+          'summarizeConversation: bỏ qua do quota/rate limit Gemini (429).',
+        );
+        return;
+      }
+      throw e;
+    }
 
     const summary = (summaryRes.text ?? '').trim();
     const facts = this.extractFacts(summary);
@@ -553,7 +581,9 @@ export class AgentService {
 
   private isWriteIntent(message: string) {
     const value = message.toLowerCase();
-    return [
+    // Sử dụng Regex với \b để đảm bảo match nguyên từ
+    // Ví dụ: "ghi" sẽ match, nhưng "nghiệm" hoặc "ghi nhận" (nếu không có dấu cách) sẽ không match lầm
+    const keywords = [
       'ghi',
       'thêm',
       'tạo',
@@ -565,7 +595,13 @@ export class AgentService {
       'log glucose',
       'log meal',
       'log medication',
-    ].some((keyword) => value.includes(keyword));
+    ];
+  
+    return keywords.some((kw) => {
+      // Tạo regex: \bghi\b, \btạo\b...
+      const regex = new RegExp(`\\b${kw}\\b`, 'i');
+      return regex.test(value);
+    });
   }
 
   private calculateAge(dateOfBirth: Date | string | null) {
