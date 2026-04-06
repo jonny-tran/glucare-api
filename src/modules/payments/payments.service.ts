@@ -1,8 +1,10 @@
 import {
+  InternalServerErrorException,
   HttpException,
   HttpStatus,
   Injectable,
   Logger,
+  NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
@@ -14,6 +16,7 @@ import { UserRole } from '../../database/schema';
 import { SePayQueryDto } from './dto/sepay-query.dto';
 import { PaymentsRepository, SubscriptionTier } from './payments.repository';
 import { SePayWebhookDto } from './dto/sepay-webhook.dto';
+import { InitiatePaymentDto } from './dto/initiate-payment.dto';
 
 type PackageCode = 'M' | 'Y' | 'L';
 
@@ -58,6 +61,55 @@ export class PaymentsService {
     } catch (error) {
       this.handleSePayApiError(error, 'getTransactionDetail');
     }
+  }
+
+  async initiatePayment(dto: InitiatePaymentDto): Promise<{ paymentUrl: string }> {
+    try {
+      const userExists = await this.paymentsRepository.existsUserById(dto.userId);
+      if (!userExists) {
+        throw new NotFoundException(`User ${dto.userId} not found`);
+      }
+
+      const simulatorUrl = this.resolvePaymentSimulatorUrl();
+
+      const paymentUrl = `${simulatorUrl}?userId=${encodeURIComponent(dto.userId)}&package=${encodeURIComponent(dto.packageType)}`;
+      return { paymentUrl };
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof ServiceUnavailableException
+      ) {
+        throw error;
+      }
+      this.logger.error(
+        `Failed to initiate payment for user ${dto.userId}: ${String(error)}`,
+      );
+      throw new InternalServerErrorException('Failed to initiate payment');
+    }
+  }
+
+  private resolvePaymentSimulatorUrl(): string {
+    const rawGatewayUrl = this.configService.get<string>('URL_PAYMENTS_GATEWAY');
+    if (!rawGatewayUrl) {
+      throw new ServiceUnavailableException(
+        'URL_PAYMENTS_GATEWAY is not configured',
+      );
+    }
+
+    const base = rawGatewayUrl.replace(/\/+$/, '');
+
+    // If env already points to a specific path, normalize it to new /payment route.
+    if (base.includes('/payment/simulator')) {
+      return base.replace('/payment/simulator', '/payment');
+    }
+    if (base.includes('/dev/payments')) {
+      return base.replace('/dev/payments', '/payment');
+    }
+    if (base.endsWith('/payment')) {
+      return base;
+    }
+
+    return `${base}/payment`;
   }
 
   parseUserIdFromContent(content: string): string | null {

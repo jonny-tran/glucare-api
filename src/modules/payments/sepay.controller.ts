@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  ForbiddenException,
   Headers,
   HttpCode,
   HttpStatus,
@@ -8,12 +9,19 @@ import {
   Res,
   ServiceUnavailableException,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { AtGuard } from '../auth/guards/auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import type { JwtPayload } from '../auth/interfaces/auth.interface';
 import { PaymentsService } from './payments.service';
 import { SePayTransferType, SePayWebhookDto } from './dto/sepay-webhook.dto';
+import { InitiatePaymentDto } from './dto/initiate-payment.dto';
 
 @ApiTags('Payments')
 @Controller('payments')
@@ -22,6 +30,24 @@ export class SePayController {
     private readonly paymentsService: PaymentsService,
     private readonly configService: ConfigService,
   ) {}
+
+  @Post('initiate')
+  @ApiBearerAuth()
+  @UseGuards(AtGuard, RolesGuard)
+  @Roles('PATIENT')
+  @ApiOperation({
+    summary:
+      'Khởi tạo URL thanh toán để redirect từ Mobile sang Web Simulator',
+  })
+  async initiatePayment(
+    @Body() dto: InitiatePaymentDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    if (dto.userId !== user.sub) {
+      throw new ForbiddenException('Bạn chỉ có thể khởi tạo thanh toán cho chính mình');
+    }
+    return this.paymentsService.initiatePayment(dto);
+  }
 
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
