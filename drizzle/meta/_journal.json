@@ -120,6 +120,20 @@
       "when": 1775487911852,
       "tag": "0016_melted_ogun",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1775497363477,
+      "tag": "0017_fat_hardball",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1775497771019,
+      "tag": "0018_tricky_giant_man",
+      "breakpoints": true
     }
   ]
 }

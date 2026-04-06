@@ -22,6 +22,7 @@ import type { JwtPayload } from '../auth/interfaces/auth.interface';
 import { PaymentsService } from './payments.service';
 import { SePayTransferType, SePayWebhookDto } from './dto/sepay-webhook.dto';
 import { InitiatePaymentDto } from './dto/initiate-payment.dto';
+import { CancelPaymentDto } from './dto/cancel-payment.dto';
 
 @ApiTags('Payments')
 @Controller('payments')
@@ -47,6 +48,20 @@ export class SePayController {
       throw new ForbiddenException('Bạn chỉ có thể khởi tạo thanh toán cho chính mình');
     }
     return this.paymentsService.initiatePayment(dto);
+  }
+
+  @Post('cancel')
+  @ApiBearerAuth()
+  @UseGuards(AtGuard, RolesGuard)
+  @Roles('PATIENT')
+  @ApiOperation({
+    summary: 'Hủy giao dịch PENDING của user',
+  })
+  async cancelPayment(
+    @Body() dto: CancelPaymentDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.paymentsService.cancelPayment(user.sub, dto);
   }
 
   @Post('webhook')

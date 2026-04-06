@@ -140,6 +140,12 @@ export const appointmentStatusEnum = pgEnum('appointment_status', [
   'CANCELLED',
   'COMPLETED',
 ]);
+export const transactionStatusEnum = pgEnum('transaction_status', [
+  'PENDING',
+  'SUCCESS',
+  'FAILED',
+  'CANCELLED',
+]);
 
 // --- 2. CORE TABLES ---
 
@@ -226,16 +232,35 @@ export const medications = pgTable('medications', {
 // E-14: Transactions (SePay reconciliation history)
 export const transactions = pgTable('transactions', {
   // Use SePay transaction UUID directly
-  id: uuid('id').primaryKey(),
+  id: uuid('id').defaultRandom().primaryKey(),
   userId: uuid('user_id')
     .references(() => users.id, { onDelete: 'cascade' })
     .notNull(),
   amount: decimal('amount', { precision: 15, scale: 2 }).notNull(),
   transferType: varchar('transfer_type', { length: 10 }).notNull(), // in | out
+  status: transactionStatusEnum('status').default('PENDING').notNull(),
   gateway: varchar('gateway', { length: 100 }),
   transactionContent: text('transaction_content'),
   referenceCode: varchar('reference_code', { length: 255 }),
+  expiresAt: timestamp('expires_at').notNull(),
+  cancelledAt: timestamp('cancelled_at'),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// E-15: Subscription Logs (Audit trail)
+export const subscriptionLogs = pgTable('subscription_logs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+  transactionId: uuid('transaction_id').references(() => transactions.id, {
+    onDelete: 'set null',
+  }),
+  oldTier: varchar('old_tier', { length: 20 }),
+  newTier: varchar('new_tier', { length: 20 }),
+  oldExpiry: timestamp('old_expiry'),
+  newExpiry: timestamp('new_expiry'),
+  reason: text('reason'),
+  createdAt: timestamp('created_at').defaultNow(),
 });
 
 // E-04: Glucose Readings
@@ -505,6 +530,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   doctor: one(doctors, { fields: [users.id], references: [doctors.userId] }),
   chatSessions: many(chatSessions),
   transactions: many(transactions),
+  subscriptionLogs: many(subscriptionLogs),
   glucoseReadings: many(glucoseReadings),
   meals: many(meals),
   medications: many(medications),
@@ -576,7 +602,25 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
     fields: [transactions.userId],
     references: [users.id],
   }),
+  subscriptionLog: one(subscriptionLogs, {
+    fields: [transactions.id],
+    references: [subscriptionLogs.transactionId],
+  }),
 }));
+
+export const subscriptionLogsRelations = relations(
+  subscriptionLogs,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [subscriptionLogs.userId],
+      references: [users.id],
+    }),
+    transaction: one(transactions, {
+      fields: [subscriptionLogs.transactionId],
+      references: [transactions.id],
+    }),
+  }),
+);
 
 // Update glucoseReadingsRelations to include meals and medications if needed,
 // but usually one-to-many from user is fine.

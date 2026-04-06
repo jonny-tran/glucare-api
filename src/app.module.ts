@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -34,6 +35,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
         limit: 20,
       },
     ]),
+    ScheduleModule.forRoot(),
     DatabaseModule,
     EventEmitterModule.forRoot(),
     AdminModule,

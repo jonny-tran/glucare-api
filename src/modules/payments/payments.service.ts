@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   InternalServerErrorException,
   HttpException,
   HttpStatus,
@@ -10,13 +11,16 @@ import {
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { isAxiosError } from 'axios';
+import { randomUUID } from 'crypto';
 import dayjs from 'dayjs';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { firstValueFrom } from 'rxjs';
 import { UserRole } from '../../database/schema';
 import { SePayQueryDto } from './dto/sepay-query.dto';
 import { PaymentsRepository, SubscriptionTier } from './payments.repository';
 import { SePayWebhookDto } from './dto/sepay-webhook.dto';
 import { InitiatePaymentDto } from './dto/initiate-payment.dto';
+import { CancelPaymentDto } from './dto/cancel-payment.dto';
 
 type PackageCode = 'M' | 'Y' | 'L';
 
@@ -65,12 +69,31 @@ export class PaymentsService {
 
   async initiatePayment(dto: InitiatePaymentDto): Promise<{ paymentUrl: string }> {
     try {
-      const userExists = await this.paymentsRepository.existsUserById(dto.userId);
-      if (!userExists) {
+      const user = await this.paymentsRepository.findUserSubscription(dto.userId);
+      if (!user) {
         throw new NotFoundException(`User ${dto.userId} not found`);
       }
 
       const simulatorUrl = this.resolvePaymentSimulatorUrl();
+      const transactionId = randomUUID();
+      const expectedAmount = this.resolveExpectedAmountByPackage(dto.packageType);
+      const now = new Date();
+      const expiresAt = dayjs(now).add(5, 'minute').toDate();
+
+      await this.paymentsRepository.createTransaction({
+        id: transactionId,
+        userId: dto.userId,
+        amount: expectedAmount,
+        transferType: 'in',
+        status: 'PENDING',
+        gateway: null,
+        transactionContent: `PENDING ${dto.packageType}`,
+        referenceCode: null,
+        expiresAt,
+        cancelledAt: null,
+        updatedAt: now,
+        createdAt: now,
+      });
 
       const paymentUrl = `${simulatorUrl}?userId=${encodeURIComponent(dto.userId)}&package=${encodeURIComponent(dto.packageType)}`;
       return { paymentUrl };
@@ -127,24 +150,35 @@ export class PaymentsService {
     return match[1].toUpperCase() as PackageCode;
   }
 
+  parsePhoneFromContent(content: string): string | null {
+    if (!content) return null;
+    const match = content.trim().match(/GLUCARE[ _]([0-9]{9,11})/i);
+    return match?.[1] ?? null;
+  }
+
   async persistWebhookTransaction(payload: SePayWebhookDto) {
     const content = payload.content ?? '';
-    const userId = this.parseUserIdFromContent(content);
-    if (!userId) {
-      this.logger.warn(`Skip SePay transaction ${payload.id}: cannot parse user id`);
-      return false;
-    }
-
-    const user = await this.paymentsRepository.findUserSubscription(userId);
-    if (!user) {
+    const phone = this.parsePhoneFromContent(content);
+    if (!phone) {
       this.logger.warn(
-        `Skip SePay transaction ${payload.id}: user ${userId} does not exist`,
+        `Skip SePay transaction ${payload.id}: cannot parse phone number`,
       );
       return false;
     }
 
+    const user = await this.paymentsRepository.findUserByPhone(phone);
+    if (!user) {
+      this.logger.warn(
+        `Skip SePay transaction ${payload.id}: user with phone ${phone} does not exist`,
+      );
+      return false;
+    }
+
+    const userId = user.id;
     const packageCode = this.parsePackageCodeFromContent(content);
     const now = dayjs();
+    const oldTier = (user.subscriptionTier ?? 'TRIAL') as SubscriptionTier;
+    const oldExpiry = user.subscriptionExpiry ?? null;
 
     let shouldUpdateSubscription = false;
     let nextTier: SubscriptionTier | undefined;
@@ -179,25 +213,31 @@ export class PaymentsService {
         nextTier = packageCode === 'M' ? 'MONTHLY' : 'YEARLY';
         nextExpiry = startFrom.add(days, 'day').toDate();
       } else {
+        await this.paymentsRepository.markPendingTransactionFailedByUser(
+          userId,
+          payload.transferAmount.toString(),
+          'Invalid package code in transfer content',
+        );
         this.logger.warn(
           `Transaction ${payload.id} parsed user ${userId} but no package code (M/Y/L), save transaction only`,
         );
+        return false;
       }
     }
 
-    const inserted = await this.paymentsRepository.applyPaymentWithTransaction({
-      transaction: {
-        id: payload.id,
-        userId,
-        amount: payload.transferAmount.toString(),
-        transferType: payload.transferType,
-        gateway: payload.gateway ?? null,
-        transactionContent: payload.content ?? null,
-        referenceCode: payload.referenceCode ?? null,
-        createdAt: payload.transactionDate
-          ? new Date(payload.transactionDate)
-          : new Date(),
-      },
+    const inserted = await this.paymentsRepository.finalizeWebhookSuccess({
+      webhookTransactionId: payload.id,
+      userId,
+      amount: payload.transferAmount.toString(),
+      transferType: payload.transferType,
+      gateway: payload.gateway ?? null,
+      transactionContent: payload.content ?? null,
+      referenceCode: payload.referenceCode ?? null,
+      paidAt: payload.transactionDate ? new Date(payload.transactionDate) : new Date(),
+      now: new Date(),
+      reason: `Nạp gói ${packageCode} qua ${payload.gateway ?? 'UNKNOWN_GATEWAY'}`,
+      oldTier,
+      oldExpiry,
       shouldUpdateSubscription,
       nextTier,
       nextExpiry,
@@ -211,6 +251,44 @@ export class PaymentsService {
     }
 
     return inserted;
+  }
+
+  async cancelPayment(userId: string, dto: CancelPaymentDto) {
+    const cancelledId = await this.paymentsRepository.cancelPendingTransaction(
+      userId,
+      dto.transactionId,
+    );
+
+    if (!cancelledId) {
+      throw new BadRequestException('Không tìm thấy giao dịch PENDING để hủy');
+    }
+
+    this.logger.log(`User ${userId} cancelled transaction ${cancelledId}`);
+    return { transactionId: cancelledId, status: 'CANCELLED' as const };
+  }
+
+  @Cron(CronExpression.EVERY_MINUTE)
+  async autoCancelExpiredPendingTransactions() {
+    const cancelledCount =
+      await this.paymentsRepository.cancelExpiredPendingTransactions(new Date());
+    if (cancelledCount > 0) {
+      this.logger.log(`Auto-cancelled ${cancelledCount} expired pending transaction(s)`);
+    }
+  }
+
+  private resolveExpectedAmountByPackage(packageType: PackageCode): string {
+    const keyMap: Record<PackageCode, string> = {
+      M: 'PAYMENT_PRICE_M',
+      Y: 'PAYMENT_PRICE_Y',
+      L: 'PAYMENT_PRICE_L',
+    };
+    const raw = this.configService.get<string>(keyMap[packageType]);
+    if (!raw) return '0';
+
+    const normalized = Number(raw);
+    return Number.isFinite(normalized) && normalized >= 0
+      ? normalized.toString()
+      : '0';
   }
 
   private getApiToken(): string {
