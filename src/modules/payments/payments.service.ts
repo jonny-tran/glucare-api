@@ -67,7 +67,11 @@ export class PaymentsService {
     }
   }
 
-  async initiatePayment(dto: InitiatePaymentDto): Promise<{ paymentUrl: string }> {
+  async initiatePayment(dto: InitiatePaymentDto): Promise<{
+    paymentUrl: string;
+    transactionId: string;
+    expiresAt: string;
+  }> {
     try {
       const user = await this.paymentsRepository.findUserSubscription(dto.userId);
       if (!user) {
@@ -95,8 +99,12 @@ export class PaymentsService {
         createdAt: now,
       });
 
-      const paymentUrl = `${simulatorUrl}?userId=${encodeURIComponent(dto.userId)}&package=${encodeURIComponent(dto.packageType)}`;
-      return { paymentUrl };
+      const paymentUrl = `${simulatorUrl}?userId=${encodeURIComponent(dto.userId)}&package=${encodeURIComponent(dto.packageType)}&transactionId=${encodeURIComponent(transactionId)}`;
+      return {
+        paymentUrl,
+        transactionId,
+        expiresAt: expiresAt.toISOString(),
+      };
     } catch (error) {
       if (
         error instanceof NotFoundException ||
