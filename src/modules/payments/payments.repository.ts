@@ -1,8 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, desc, eq, gt, lt } from 'drizzle-orm';
+import { and, desc, eq, gt, lt, sql, count } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DATABASE_CONNECTION } from '../../database/database.module';
 import * as schema from '../../database/schema';
+import { IPaginatedResponse } from '../../common/interfaces/pagination.interface';
+import { TransactionsHistoryDto } from './dto/transactions-history.dto';
 
 export type SubscriptionTier = 'TRIAL' | 'MONTHLY' | 'YEARLY' | 'LIFETIME';
 export type TransactionStatus = 'PENDING' | 'SUCCESS' | 'FAILED' | 'CANCELLED';
@@ -295,5 +297,77 @@ export class PaymentsRepository {
       .returning({ id: schema.transactions.id });
 
     return cancelled.length;
+  }
+
+  async getUserTransactionsHistory(
+    userId: string,
+    query: TransactionsHistoryDto,
+  ): Promise<
+    IPaginatedResponse<{
+      id: string;
+      amount: string;
+      status: TransactionStatus;
+      createdAt: Date;
+    }> & { totalMoney: string }
+  > {
+    const { page = 1, limit = 10, status } = query;
+    const offset = (page - 1) * limit;
+
+    const whereConditions = [
+      eq(schema.transactions.userId, userId),
+      // do not return bank-specific fields
+    ] as const;
+
+    const whereExpr = status
+      ? and(...whereConditions, eq(schema.transactions.status, status))
+      : and(...whereConditions);
+
+    const [totalRecord] = await this.db
+      .select({ count: count() })
+      .from(schema.transactions)
+      .where(whereExpr);
+
+    const [totalMoneyRow] = await this.db
+      .select({
+        total: sql<string>`COALESCE(SUM(${schema.transactions.amount}), 0)`,
+      })
+      .from(schema.transactions)
+      .where(
+        status
+          ? and(
+              eq(schema.transactions.userId, userId),
+              eq(schema.transactions.status, status),
+            )
+          : eq(schema.transactions.userId, userId),
+      );
+
+    const data = await this.db.query.transactions.findMany({
+      columns: {
+        id: true,
+        amount: true,
+        status: true,
+        createdAt: true,
+      },
+      where: whereExpr,
+      orderBy: [desc(schema.transactions.createdAt)],
+      limit,
+      offset,
+    });
+
+    return {
+      data: data.map((t) => ({
+        id: t.id,
+        amount: t.amount as unknown as string,
+        status: t.status as TransactionStatus,
+        createdAt: t.createdAt,
+      })),
+      totalMoney: totalMoneyRow?.total ?? '0',
+      meta: {
+        total: totalRecord.count,
+        page,
+        limit,
+        lastPage: Math.ceil(totalRecord.count / limit),
+      },
+    };
   }
 }

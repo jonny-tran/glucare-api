@@ -21,6 +21,7 @@ import { PaymentsRepository, SubscriptionTier } from './payments.repository';
 import { SePayWebhookDto } from './dto/sepay-webhook.dto';
 import { InitiatePaymentDto } from './dto/initiate-payment.dto';
 import { CancelPaymentDto } from './dto/cancel-payment.dto';
+import { TransactionsHistoryDto } from './dto/transactions-history.dto';
 
 type PackageCode = 'M' | 'Y' | 'L';
 
@@ -273,6 +274,10 @@ export class PaymentsService {
 
     this.logger.log(`User ${userId} cancelled transaction ${cancelledId}`);
     return { transactionId: cancelledId, status: 'CANCELLED' as const };
+  }
+
+  async getMyTransactionsHistory(userId: string, query: TransactionsHistoryDto) {
+    return this.paymentsRepository.getUserTransactionsHistory(userId, query);
   }
 
   @Cron(CronExpression.EVERY_MINUTE)

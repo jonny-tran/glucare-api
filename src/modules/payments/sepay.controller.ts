@@ -3,9 +3,11 @@ import {
   Controller,
   ForbiddenException,
   Headers,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
+  Query,
   Res,
   ServiceUnavailableException,
   UnauthorizedException,
@@ -23,6 +25,7 @@ import { PaymentsService } from './payments.service';
 import { SePayTransferType, SePayWebhookDto } from './dto/sepay-webhook.dto';
 import { InitiatePaymentDto } from './dto/initiate-payment.dto';
 import { CancelPaymentDto } from './dto/cancel-payment.dto';
+import { TransactionsHistoryDto } from './dto/transactions-history.dto';
 
 @ApiTags('Payments')
 @Controller('payments')
@@ -62,6 +65,18 @@ export class SePayController {
     @CurrentUser() user: JwtPayload,
   ) {
     return this.paymentsService.cancelPayment(user.sub, dto);
+  }
+
+  @Get('history')
+  @ApiBearerAuth()
+  @UseGuards(AtGuard, RolesGuard)
+  @Roles('PATIENT')
+  @ApiOperation({ summary: 'Lấy lịch sử giao dịch của tôi (phân trang)' })
+  async getMyHistory(
+    @CurrentUser() user: JwtPayload,
+    @Query() query: TransactionsHistoryDto,
+  ) {
+    return this.paymentsService.getMyTransactionsHistory(user.sub, query);
   }
 
   @Post('webhook')
