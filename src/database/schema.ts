@@ -48,6 +48,12 @@ export const userStatusEnum = pgEnum('user_status', [
   'ACTIVE',
   'BLOCKED',
 ]);
+export const subscriptionTierEnum = pgEnum('subscription_tier', [
+  'TRIAL',
+  'MONTHLY',
+  'YEARLY',
+  'LIFETIME',
+]);
 
 // Blog: Article language
 export const articleLanguageEnum = pgEnum('article_language', ['VI', 'EN']);
@@ -144,7 +150,7 @@ export const users = pgTable('users', {
   email: text('email').unique(),
   password: text('password').notNull(),
   role: userRoleEnum('role').default('PATIENT').notNull(),
-  subscriptionTier: varchar('subscription_tier', { length: 20 })
+  subscriptionTier: subscriptionTierEnum('subscription_tier')
     .default('TRIAL')
     .notNull(), // TRIAL, MONTHLY, YEARLY, LIFETIME
   subscriptionExpiry: timestamp('subscription_expiry'),

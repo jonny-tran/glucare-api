@@ -102,6 +102,12 @@ export class PaymentsService {
       const currentTier = (user.subscriptionTier ?? 'TRIAL') as SubscriptionTier;
 
       if (currentTier === 'LIFETIME') {
+        // Enforce invariant: LIFETIME users must always have null expiry.
+        if (user.subscriptionExpiry) {
+          shouldUpdateSubscription = true;
+          nextTier = 'LIFETIME';
+          nextExpiry = null;
+        }
         this.logger.log(
           `User ${userId} đã ở gói LIFETIME, bỏ qua cập nhật expiry cho giao dịch ${payload.id}`,
         );
