@@ -144,6 +144,10 @@ export const users = pgTable('users', {
   email: text('email').unique(),
   password: text('password').notNull(),
   role: userRoleEnum('role').default('PATIENT').notNull(),
+  subscriptionTier: varchar('subscription_tier', { length: 20 })
+    .default('TRIAL')
+    .notNull(), // TRIAL, MONTHLY, YEARLY, LIFETIME
+  subscriptionExpiry: timestamp('subscription_expiry'),
   fullName: text('full_name'),
   avatarUrl: text('avatar_url'),
   status: userStatusEnum('status').default('ACTIVE').notNull(),
@@ -211,6 +215,21 @@ export const medications = pgTable('medications', {
   notes: text('notes'),
   deletedAt: timestamp('deleted_at'),
   createdAt: timestamp('created_at').defaultNow(),
+});
+
+// E-14: Transactions (SePay reconciliation history)
+export const transactions = pgTable('transactions', {
+  // Use SePay transaction UUID directly
+  id: uuid('id').primaryKey(),
+  userId: uuid('user_id')
+    .references(() => users.id, { onDelete: 'cascade' })
+    .notNull(),
+  amount: decimal('amount', { precision: 15, scale: 2 }).notNull(),
+  transferType: varchar('transfer_type', { length: 10 }).notNull(), // in | out
+  gateway: varchar('gateway', { length: 100 }),
+  transactionContent: text('transaction_content'),
+  referenceCode: varchar('reference_code', { length: 255 }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
 // E-04: Glucose Readings
@@ -479,6 +498,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   patient: one(patients, { fields: [users.id], references: [patients.userId] }),
   doctor: one(doctors, { fields: [users.id], references: [doctors.userId] }),
   chatSessions: many(chatSessions),
+  transactions: many(transactions),
   glucoseReadings: many(glucoseReadings),
   meals: many(meals),
   medications: many(medications),
@@ -543,6 +563,13 @@ export const medicationsRelations = relations(medications, ({ one, many }) => ({
   }),
   glucoseReadings: many(glucoseReadings),
   reminders: many(reminders),
+}));
+
+export const transactionsRelations = relations(transactions, ({ one }) => ({
+  user: one(users, {
+    fields: [transactions.userId],
+    references: [users.id],
+  }),
 }));
 
 // Update glucoseReadingsRelations to include meals and medications if needed,
