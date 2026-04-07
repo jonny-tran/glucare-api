@@ -69,6 +69,20 @@ export class AuthRepository {
       .where(eq(schema.users.id, userId));
   }
 
+  async updatePasswordAndClearRefreshToken(
+    userId: string,
+    hashedPassword: string,
+  ) {
+    await this.db
+      .update(schema.users)
+      .set({
+        password: hashedPassword,
+        hashedRefreshToken: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.users.id, userId));
+  }
+
   async createPatient(
     userData: {
       phoneNumber: string;

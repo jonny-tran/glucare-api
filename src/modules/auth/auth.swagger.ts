@@ -6,6 +6,7 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 import { CreateDoctorDto } from './dto/create-doctor.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginAdminDto, LoginUserDto, RefreshTokenDto } from './dto/login.dto';
 import { RegisterPatientDto } from './dto/register.dto';
 
@@ -192,6 +193,38 @@ export const ApiLogout = () =>
       createErrorSchema(
         HttpStatus.UNAUTHORIZED,
         'Token không hợp lệ hoặc đã hết hạn',
+      ),
+    ),
+    CommonAuthErrors(),
+  );
+
+export const ApiForgotPassword = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Quên mật khẩu — đặt lại bằng số điện thoại và mật khẩu mới',
+    }),
+    ApiBody({ type: ForgotPasswordDto }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description: 'Đặt lại mật khẩu thành công',
+      schema: {
+        example: {
+          statusCode: 200,
+          message: 'Đặt lại mật khẩu thành công',
+          data: null,
+        },
+      },
+    }),
+    ApiResponse(
+      createErrorSchema(
+        HttpStatus.BAD_REQUEST,
+        'Số điện thoại chưa được đăng ký',
+      ),
+    ),
+    ApiResponse(
+      createErrorSchema(
+        HttpStatus.FORBIDDEN,
+        'Tài khoản Admin không hỗ trợ đặt lại mật khẩu qua đây',
       ),
     ),
     CommonAuthErrors(),

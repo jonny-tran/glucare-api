@@ -13,6 +13,7 @@ import { ResponseMessage } from 'src/common/decorators/response-message.decorato
 import { AuthService } from './auth.service';
 import {
   ApiCreateDoctor,
+  ApiForgotPassword,
   ApiGetProfile,
   ApiLoginAdmin,
   ApiLoginUser,
@@ -24,6 +25,7 @@ import { CurrentUser } from './decorators/current-user.decorator';
 import { Roles } from './decorators/roles.decorator';
 import { CreateDoctorDto } from './dto/create-doctor.dto';
 import { LoginAdminDto, LoginUserDto, RefreshTokenDto } from './dto/login.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { RegisterPatientDto } from './dto/register.dto';
 import { AtGuard } from './guards/auth.guard';
 import { RolesGuard } from './guards/roles.guard';
@@ -77,6 +79,15 @@ export class AuthController {
   @ResponseMessage('Đăng xuất thành công')
   async logout(@CurrentUser('sub') userId: string) {
     return this.authService.logout(userId);
+  }
+
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiForgotPassword()
+  @ResponseMessage('Đặt lại mật khẩu thành công')
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto);
   }
 
   @Throttle({ default: { limit: 3, ttl: 60000 } })

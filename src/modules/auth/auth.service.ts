@@ -8,6 +8,7 @@ import * as argon2 from 'argon2';
 import { AuthRepository } from './auth.repository';
 import { CreateDoctorDto } from './dto/create-doctor.dto';
 import { LoginAdminDto, LoginUserDto, RefreshTokenDto } from './dto/login.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { RegisterPatientDto } from './dto/register.dto';
 import { TokenService } from './helper/token.service';
 
@@ -94,6 +95,28 @@ export class AuthService {
 
   async logout(userId: string) {
     await this.authRepository.updateRefreshToken(userId, null);
+  }
+
+  async forgotPassword(dto: ForgotPasswordDto) {
+    const user = await this.authRepository.findUserByPhoneNumber(
+      dto.phoneNumber,
+    );
+
+    if (!user) {
+      throw new BadRequestException('Số điện thoại chưa được đăng ký');
+    }
+
+    if (user.role === 'ADMIN') {
+      throw new ForbiddenException(
+        'Tài khoản Admin không hỗ trợ đặt lại mật khẩu qua đây',
+      );
+    }
+
+    const hashedPassword = await argon2.hash(dto.newPassword);
+    await this.authRepository.updatePasswordAndClearRefreshToken(
+      user.id,
+      hashedPassword,
+    );
   }
 
   async registerPatient(dto: RegisterPatientDto) {
