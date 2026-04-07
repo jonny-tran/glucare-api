@@ -13,13 +13,15 @@ import { OcrService } from './services/ocr.service';
 import { SpeechToTextService } from './services/speech-to-text.service';
 import { ToolsRegistryService } from './tools/tools-registry.service';
 import { CloudinaryTempCleanupTask } from './cloudinary-temp-cleanup.task';
-import { GeminiClientService } from './gemini-client.service';
+import { GroqClientService } from './groq-client.service';
+import { GoogleGenAiClientService } from './google-genai-client.service';
 
 @Module({
   imports: [GlucoseModule, MedicationsModule],
   controllers: [AiController],
   providers: [
-    GeminiClientService,
+    GroqClientService,
+    GoogleGenAiClientService,
     AgentService,
     AiSessionService,
     AiSessionTitleService,

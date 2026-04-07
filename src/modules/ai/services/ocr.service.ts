@@ -1,11 +1,11 @@
 import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
-import { GeminiClientService } from '../gemini-client.service';
+import { GoogleGenAiClientService } from '../google-genai-client.service';
 
 @Injectable()
 export class OcrService {
   private readonly logger = new Logger(OcrService.name);
 
-  constructor(private readonly geminiClient: GeminiClientService) {}
+  constructor(private readonly googleGenAiClient: GoogleGenAiClientService) {}
 
   /** Đọc số trên màn hình máy đo từ ảnh (URL Cloudinary). */
   async describeMeterImageFromUrl(secureUrl: string): Promise<string> {
@@ -21,8 +21,8 @@ export class OcrService {
         res.headers.get('content-type')?.split(';')[0]?.trim() || 'image/jpeg';
       const b64 = buf.toString('base64');
 
-      const ai = this.geminiClient.getClient();
-      const model = this.geminiClient.getChatModelId();
+      const ai = this.googleGenAiClient.getClient();
+      const model = this.googleGenAiClient.getChatModelId();
 
       const out = await ai.models.generateContent({
         model,
@@ -47,7 +47,7 @@ export class OcrService {
         throw e;
       }
       const msg = e instanceof Error ? e.message : String(e);
-      this.logger.warn(`Gemini vision OCR failed: ${msg}`);
+      this.logger.warn(`Vision OCR failed: ${msg}`);
       throw new ServiceUnavailableException(`Không đọc được ảnh máy đo: ${msg}`);
     }
   }

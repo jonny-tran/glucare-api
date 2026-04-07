@@ -65,7 +65,7 @@ export class ToolsRegistryService {
     process_health_media: {
       name: 'process_health_media',
       description:
-        'Xử lý file đã có trên Cloudinary: secureUrl + publicId (và tùy chọn resourceType từ upload). Gemini đa phương thức (âm thanh + ảnh). Không tự lưu DB — chỉ trả kết quả; hệ thống sẽ hỏi xác nhận người dùng.',
+        'Xử lý file đã có trên Cloudinary: secureUrl + publicId (và tùy chọn resourceType từ upload). Pipeline: OCR/phiên âm (Google GenAI) + trích xuất chỉ số (Groq). Không tự lưu DB — chỉ trả kết quả; hệ thống sẽ hỏi xác nhận người dùng.',
       schema: processHealthMediaSchema,
     },
   } as const;

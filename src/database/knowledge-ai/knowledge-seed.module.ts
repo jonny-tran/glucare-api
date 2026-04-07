@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from '../../database/database.module';
 import { EmbeddingService } from '../../modules/ai/embedding.service';
-import { GeminiClientService } from '../../modules/ai/gemini-client.service';
+import { GoogleGenAiClientService } from '../../modules/ai/google-genai-client.service';
 
 /**
- * Module tối thiểu cho script seed knowledge (chỉ cần EmbeddingService + Gemini).
+ * Module tối thiểu cho script seed knowledge (EmbeddingService + Google GenAI embedding).
  */
 @Module({
   imports: [
@@ -14,6 +14,6 @@ import { GeminiClientService } from '../../modules/ai/gemini-client.service';
     }),
     DatabaseModule,
   ],
-  providers: [GeminiClientService, EmbeddingService],
+  providers: [GoogleGenAiClientService, EmbeddingService],
 })
 export class KnowledgeSeedModule {}

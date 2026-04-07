@@ -4,13 +4,7 @@ import {
   Logger,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import {
-  createPartFromFunctionResponse,
-  FunctionCallingConfigMode,
-  type Content,
-  type Part,
-  type Tool,
-} from '@google/genai';
+import { generateText, tool, stepCountIs, type ModelMessage } from 'ai';
 import { GlucoseFilterDto } from '../../modules/glucose/dto/glucose-filter.dto';
 import { GlucoseService } from '../../modules/glucose/glucose.service';
 import { MedicationFilterDto } from '../../modules/medications/dto/medication-filter.dto';
@@ -25,17 +19,17 @@ import { HealthMediaService } from './services/health-media.service';
 import { ToolsRegistryService } from './tools/tools-registry.service';
 import { MEDICAL_DISCLAIMER_AI } from './constants';
 import { AiSessionTitleService } from './ai-session-title.service';
-import { GeminiClientService } from './gemini-client.service';
+import { GroqClientService } from './groq-client.service';
 import {
-  GEMINI_MAINTENANCE_MESSAGE_VI,
-  isGeminiQuotaOrRateLimitError,
-} from './gemini-quota.util';
-import { buildAgentFunctionDeclarations } from './gemini-tool-declarations';
+  GROQ_MAINTENANCE_MESSAGE_VI,
+  isGroqRateLimitError,
+} from './groq-quota.util';
 import type { PendingGlucosePayload } from './types/health-media.types';
 
 const MEDICAL_DISCLAIMER = MEDICAL_DISCLAIMER_AI;
 const RECENT_HISTORY_WINDOW = 12;
 const SUMMARY_TRIGGER_MESSAGES = 20;
+const TOOL_LOOP_MAX_STEPS = 15;
 
 type PromptContext = {
   userId: string;
@@ -61,7 +55,7 @@ export class AgentService {
     private readonly healthMediaService: HealthMediaService,
     private readonly toolsRegistry: ToolsRegistryService,
     private readonly aiSessionTitleService: AiSessionTitleService,
-    private readonly geminiClient: GeminiClientService,
+    private readonly groqClient: GroqClientService,
   ) {}
 
   async chat(user: JwtPayload, dto: AiChatDto, file?: Express.Multer.File) {
@@ -160,7 +154,8 @@ export class AgentService {
       session.id,
       RECENT_HISTORY_WINDOW,
     );
-    const geminiContents = this.chatHistoryToGeminiContents(history);
+    const { messages: historyMessages, systemExtra } =
+      this.chatHistoryToModelMessages(history);
 
     const systemInstruction = this.buildSystemPrompt({
       userId: user.sub,
@@ -172,12 +167,16 @@ export class AgentService {
       facts: (freshSession?.context?.facts as string[] | undefined) ?? [],
       latestStats,
     });
+    const fullSystem =
+      systemExtra.length > 0
+        ? `${systemInstruction}\n\nGhi chú hệ thống (lịch sử):\n${systemExtra}`
+        : systemInstruction;
 
     const plainReply = await this.runAssistantWithToolsLoop(
       session.id,
       user,
-      geminiContents,
-      systemInstruction,
+      historyMessages,
+      fullSystem,
     );
 
     const finalReply = this.withDisclaimer(plainReply);
@@ -207,106 +206,110 @@ export class AgentService {
     return { session, isNewSession: false as const };
   }
 
-  private chatHistoryToGeminiContents(
+  /**
+   * Ánh xạ lịch sử DB sang ModelMessage[] (Vercel AI SDK; tương đương CoreMessage).
+   */
+  private chatHistoryToModelMessages(
     history: Array<{ role: string; content: string }>,
-  ): Content[] {
-    const out: Content[] = [];
+  ): { messages: ModelMessage[]; systemExtra: string } {
+    const messages: ModelMessage[] = [];
+    const systemParts: string[] = [];
+
     for (const item of history) {
       if (item.role === 'user') {
-        out.push({ role: 'user', parts: [{ text: item.content }] });
+        messages.push({ role: 'user', content: item.content });
       } else if (item.role === 'assistant') {
-        out.push({ role: 'model', parts: [{ text: item.content }] });
+        messages.push({ role: 'assistant', content: item.content });
       } else if (item.role === 'tool') {
-        out.push({
-          role: 'model',
-          parts: [{ text: `Tool output: ${item.content}` }],
+        messages.push({
+          role: 'assistant',
+          content: `Tool output: ${item.content}`,
         });
       } else if (item.role === 'system') {
-        out.push({
-          role: 'model',
-          parts: [{ text: `System note: ${item.content}` }],
-        });
+        systemParts.push(item.content);
       }
     }
-    return out;
+
+    return {
+      messages,
+      systemExtra: systemParts.join('\n'),
+    };
+  }
+
+  private buildAgentTools(sessionId: string, user: JwtPayload) {
+    const d = this.toolsRegistry.definitions;
+    return {
+      get_glucose_history: tool({
+        description: d.get_glucose_history.description,
+        inputSchema: d.get_glucose_history.schema,
+        execute: async (input) =>
+          this.dispatchAgentTool(
+            'get_glucose_history',
+            input as Record<string, unknown>,
+            sessionId,
+            user,
+          ),
+      }),
+      get_medication_logs: tool({
+        description: d.get_medication_logs.description,
+        inputSchema: d.get_medication_logs.schema,
+        execute: async (input) =>
+          this.dispatchAgentTool(
+            'get_medication_logs',
+            input as Record<string, unknown>,
+            sessionId,
+            user,
+          ),
+      }),
+      search_knowledge_base: tool({
+        description: d.search_knowledge_base.description,
+        inputSchema: d.search_knowledge_base.schema,
+        execute: async (input) =>
+          this.dispatchAgentTool(
+            'search_knowledge_base',
+            input as Record<string, unknown>,
+            sessionId,
+            user,
+          ),
+      }),
+      process_health_media: tool({
+        description: d.process_health_media.description,
+        inputSchema: d.process_health_media.schema,
+        execute: async (input) =>
+          this.dispatchAgentTool(
+            'process_health_media',
+            input as Record<string, unknown>,
+            sessionId,
+            user,
+          ),
+      }),
+    };
   }
 
   private async runAssistantWithToolsLoop(
     sessionId: string,
     user: JwtPayload,
-    contents: Content[],
+    messages: ModelMessage[],
     systemInstruction: string,
   ): Promise<string> {
-    const ai = this.geminiClient.getClient();
-    const model = this.geminiClient.getChatModelId();
-    const tools: Tool[] = [
-      { functionDeclarations: buildAgentFunctionDeclarations() },
-    ];
+    const model = this.groqClient.getLanguageModel();
+    const tools = this.buildAgentTools(sessionId, user);
 
-    const working: Content[] = [...contents];
-    let iterations = 0;
-    const maxIterations = 15;
-
-    while (iterations++ < maxIterations) {
-      let response: Awaited<
-        ReturnType<typeof ai.models.generateContent>
-      >;
-      try {
-        response = await ai.models.generateContent({
-          model,
-          contents: working,
-          config: {
-            systemInstruction,
-            tools,
-            toolConfig: {
-              functionCallingConfig: {
-                mode: FunctionCallingConfigMode.AUTO,
-              },
-            },
-          },
-        });
-      } catch (e) {
-        if (isGeminiQuotaOrRateLimitError(e)) {
-          throw new ServiceUnavailableException(GEMINI_MAINTENANCE_MESSAGE_VI);
-        }
-        throw e;
+    try {
+      const result = await generateText({
+        model,
+        system: systemInstruction,
+        messages,
+        tools,
+        stopWhen: stepCountIs(TOOL_LOOP_MAX_STEPS),
+      });
+      return result.text?.trim() ?? '';
+    } catch (e) {
+      if (isGroqRateLimitError(e)) {
+        throw new ServiceUnavailableException(GROQ_MAINTENANCE_MESSAGE_VI);
       }
-
-      const calls = response.functionCalls;
-      if (!calls?.length) {
-        return response.text?.trim() ?? '';
-      }
-
-      const modelContent = response.candidates?.[0]?.content;
-      if (modelContent?.parts?.length) {
-        working.push(modelContent);
-      }
-
-      const responseParts: Part[] = [];
-      for (let i = 0; i < calls.length; i++) {
-        const fc = calls[i];
-        const name = fc.name ?? '';
-        const args = (fc.args ?? {}) as Record<string, unknown>;
-        const result = await this.dispatchAgentTool(
-          name,
-          args,
-          sessionId,
-          user,
-        );
-        responseParts.push(
-          createPartFromFunctionResponse(
-            fc.id ?? `fc_${i}`,
-            name,
-            { output: result } as Record<string, unknown>,
-          ),
-        );
-      }
-      working.push({ role: 'user', parts: responseParts });
+      throw e;
     }
-
-    throw new ServiceUnavailableException(
-      'Vòng gọi tool vượt quá giới hạn an toàn.',
-    );
   }
 
   private async dispatchAgentTool(
@@ -525,36 +528,24 @@ export class AgentService {
       .map((m) => `[${m.role}] ${m.content}`)
       .join('\n');
 
-    const ai = this.geminiClient.getClient();
-    const model = this.geminiClient.getChatModelId();
-    let summaryRes: Awaited<ReturnType<typeof ai.models.generateContent>>;
+    const model = this.groqClient.getLanguageModel();
+    let summaryRes: Awaited<ReturnType<typeof generateText>>;
     try {
-      summaryRes = await ai.models.generateContent({
+      summaryRes = await generateText({
         model,
-        contents: [
-          {
-            role: 'user',
-            parts: [
-              {
-                text: `User ID: ${userId}\n\nHội thoại:\n${convoText}`,
-              },
-            ],
-          },
-        ],
-        config: {
-          systemInstruction: [
-            'Bạn tóm tắt hội thoại y tế cho trợ lý AI nội bộ.',
-            'Trả về 2 phần rõ ràng:',
-            '1) SUMMARY: tóm tắt ngắn bối cảnh và quyết định quan trọng.',
-            '2) FACTS: danh sách facts bền vững về người dùng dạng gạch đầu dòng.',
-            'Không thêm disclaimer.',
-          ].join('\n'),
-        },
+        system: [
+          'Bạn tóm tắt hội thoại y tế cho trợ lý AI nội bộ.',
+          'Trả về 2 phần rõ ràng:',
+          '1) SUMMARY: tóm tắt ngắn bối cảnh và quyết định quan trọng.',
+          '2) FACTS: danh sách facts bền vững về người dùng dạng gạch đầu dòng.',
+          'Không thêm disclaimer.',
+        ].join('\n'),
+        prompt: `User ID: ${userId}\n\nHội thoại:\n${convoText}`,
       });
     } catch (e) {
-      if (isGeminiQuotaOrRateLimitError(e)) {
+      if (isGroqRateLimitError(e)) {
         this.logger.warn(
-          'summarizeConversation: bỏ qua do quota/rate limit Gemini (429).',
+          'summarizeConversation: bỏ qua do quota/rate limit Groq (429).',
         );
         return;
       }
@@ -581,8 +572,6 @@ export class AgentService {
 
   private isWriteIntent(message: string) {
     const value = message.toLowerCase();
-    // Sử dụng Regex với \b để đảm bảo match nguyên từ
-    // Ví dụ: "ghi" sẽ match, nhưng "nghiệm" hoặc "ghi nhận" (nếu không có dấu cách) sẽ không match lầm
     const keywords = [
       'ghi',
       'thêm',
@@ -596,9 +585,8 @@ export class AgentService {
       'log meal',
       'log medication',
     ];
-  
+
     return keywords.some((kw) => {
-      // Tạo regex: \bghi\b, \btạo\b...
       const regex = new RegExp(`\\b${kw}\\b`, 'i');
       return regex.test(value);
     });

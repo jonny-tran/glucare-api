@@ -1,13 +1,13 @@
 import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
-import { GeminiClientService } from '../gemini-client.service';
+import { GoogleGenAiClientService } from '../google-genai-client.service';
 
 @Injectable()
 export class SpeechToTextService {
   private readonly logger = new Logger(SpeechToTextService.name);
 
-  constructor(private readonly geminiClient: GeminiClientService) {}
+  constructor(private readonly googleGenAiClient: GoogleGenAiClientService) {}
 
-  /** Phiên âm qua Gemini đa phương thức (âm thanh từ URL). */
+  /** Phiên âm đa phương thức (âm thanh từ URL) qua Google GenAI. */
   async transcribeFromUrl(secureUrl: string): Promise<string> {
     try {
       const res = await fetch(secureUrl);
@@ -22,8 +22,8 @@ export class SpeechToTextService {
         this.guessMimeFromUrl(secureUrl);
       const b64 = buf.toString('base64');
 
-      const ai = this.geminiClient.getClient();
-      const model = this.geminiClient.getChatModelId();
+      const ai = this.googleGenAiClient.getClient();
+      const model = this.googleGenAiClient.getChatModelId();
 
       const out = await ai.models.generateContent({
         model,
@@ -47,7 +47,7 @@ export class SpeechToTextService {
         throw e;
       }
       const msg = e instanceof Error ? e.message : String(e);
-      this.logger.warn(`Gemini audio transcription failed: ${msg}`);
+      this.logger.warn(`Audio transcription failed: ${msg}`);
       throw new ServiceUnavailableException(`Không thể nhận dạng giọng nói: ${msg}`);
     }
   }

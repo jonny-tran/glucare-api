@@ -1,11 +1,12 @@
-import { Injectable, ServiceUnavailableException } from '@nestjs/common';
-import { toJSONSchema, z } from 'zod';
+import { Injectable } from '@nestjs/common';
+import { generateObject } from 'ai';
+import { z } from 'zod';
 import {
   MealContext,
   ReadingType,
 } from 'src/modules/glucose/dto/create-glucose.dto';
 import { GlucoseService } from 'src/modules/glucose/glucose.service';
-import { GeminiClientService } from '../gemini-client.service';
+import { GroqClientService } from '../groq-client.service';
 import type { HealthMediaProcessResult } from '../types/health-media.types';
 import { OcrService } from './ocr.service';
 import { SpeechToTextService } from './speech-to-text.service';
@@ -31,7 +32,7 @@ const extractionSchema = z.object({
 @Injectable()
 export class HealthMediaService {
   constructor(
-    private readonly geminiClient: GeminiClientService,
+    private readonly groqClient: GroqClientService,
     private readonly speechToTextService: SpeechToTextService,
     private readonly ocrService: OcrService,
     private readonly glucoseService: GlucoseService,
@@ -79,39 +80,22 @@ export class HealthMediaService {
     userId: string,
   ): Promise<HealthMediaProcessResult> {
     try {
-      const ai = this.geminiClient.getClient();
-      const model = this.geminiClient.getChatModelId();
+      const model = this.groqClient.getLanguageModel();
       const prompt = [
         'Trích xuất chỉ số đường huyết từ đoạn văn (có thể là lời nói hoặc mô tả màn hình máy đo).',
         'Đơn vị chuẩn: mg/dL. Nếu user nói mmol/L, quy đổi sang mg/dL (×18).',
         'Nếu không chắc mealContext, dùng FASTING.',
         'confidence: 0–1 độ tin cậy của việc trích xuất.',
-        'Trả về JSON đúng schema.',
         '',
         '---',
         rawText,
       ].join('\n');
 
-      const res = await ai.models.generateContent({
+      const { object } = await generateObject({
         model,
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        config: {
-          responseMimeType: 'application/json',
-          responseJsonSchema: toJSONSchema(extractionSchema),
-        },
+        schema: extractionSchema,
+        prompt,
       });
-
-      const raw = res.text?.trim();
-      if (!raw) {
-        return {
-          ok: false,
-          error: 'Model không trả JSON trích xuất.',
-          code: 'EXTRACTION_FAILED',
-        };
-      }
-
-      const parsedJson = JSON.parse(raw) as unknown;
-      const object = extractionSchema.parse(parsedJson);
 
       const value = Math.round(object.glucoseValueMgDl * 10) / 10;
       if (value < GLUCOSE_MIN || value > GLUCOSE_MAX) {

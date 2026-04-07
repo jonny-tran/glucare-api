@@ -30,6 +30,7 @@
     "db:seed:knowledge-med-dialog": "tsx src/database/knowledge-ai/seed-med-dialog.ts"
   },
   "dependencies": {
+    "@ai-sdk/groq": "^3.0.34",
     "@google/genai": "^1.48.0",
     "@neondatabase/serverless": "^1.0.2",
     "@nestjs/axios": "^4.0.1",
@@ -45,6 +46,7 @@
     "@nestjs/swagger": "^11.2.4",
     "@nestjs/terminus": "^11.0.0",
     "@nestjs/throttler": "^6.5.0",
+    "ai": "^6.0.149",
     "argon2": "^0.44.0",
     "axios": "^1.14.0",
     "cache-manager": "^7.2.8",

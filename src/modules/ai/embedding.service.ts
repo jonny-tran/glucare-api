@@ -2,7 +2,7 @@ import { GoogleGenAI } from '@google/genai';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { KNOWLEDGE_EMBEDDING_DIMENSION } from '../../database/schema';
-import { GeminiClientService } from './gemini-client.service';
+import { GoogleGenAiClientService } from './google-genai-client.service';
 
 /**
  * Model mặc định theo tài liệu Gemini API hiện tại.
@@ -22,13 +22,13 @@ export class EmbeddingService implements OnModuleInit {
   private embeddingGoogleAi: GoogleGenAI | null = null;
 
   constructor(
-    private readonly geminiClient: GeminiClientService,
+    private readonly googleGenAiClient: GoogleGenAiClientService,
     private readonly configService: ConfigService,
   ) {}
 
   onModuleInit() {
     this.logger.log(
-      `[Gemini] Embedding: model="${this.getEmbeddingModelId()}" (GEMINI_EMBEDDING_MODEL; mặc định ${DEFAULT_EMBEDDING_MODEL}), apiVersion=${this.getEmbeddingApiVersion()}, vector dim=${KNOWLEDGE_EMBEDDING_DIMENSION}`,
+      `[Google GenAI] Embedding: model="${this.getEmbeddingModelId()}" (GEMINI_EMBEDDING_MODEL; mặc định ${DEFAULT_EMBEDDING_MODEL}), apiVersion=${this.getEmbeddingApiVersion()}, vector dim=${KNOWLEDGE_EMBEDDING_DIMENSION}`,
     );
   }
 
@@ -50,7 +50,7 @@ export class EmbeddingService implements OnModuleInit {
   }
 
   private getGoogleAiForEmbeddings(): GoogleGenAI {
-    const apiKey = this.geminiClient.tryGetApiKey();
+    const apiKey = this.googleGenAiClient.tryGetApiKey();
     if (!apiKey) {
       throw new Error('GEMINI_API_KEY is not configured');
     }
