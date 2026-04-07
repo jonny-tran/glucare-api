@@ -45,6 +45,7 @@ export class AuthRepository {
       columns: {
         password: false,
         hashedRefreshToken: false,
+        avatarPublicId: false,
       },
     });
   }

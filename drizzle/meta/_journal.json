@@ -134,6 +134,13 @@
       "when": 1775497771019,
       "tag": "0018_tricky_giant_man",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1775538982207,
+      "tag": "0019_adorable_jamie_braddock",
+      "breakpoints": true
     }
   ]
 }

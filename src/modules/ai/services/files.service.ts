@@ -1,4 +1,9 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import streamifier from 'streamifier';
@@ -112,6 +117,51 @@ export class FilesService implements OnModuleInit {
     if (deleted > 0) {
       this.logger.log(`Cloudinary temp cleanup: đã xóa ${deleted} asset cũ hơn 24h`);
     }
+  }
+
+  /**
+   * Upload ảnh đại diện (lưu vĩnh viễn, không xóa sau 24h).
+   */
+  async uploadAvatarImage(
+    userId: string,
+    buffer: Buffer,
+    originalName: string,
+    mimeType: string,
+  ): Promise<CloudinaryUploadResult> {
+    if (!mimeType.startsWith('image/')) {
+      throw new BadRequestException('Chỉ chấp nhận file ảnh');
+    }
+
+    configureCloudinary(this.configService);
+
+    const folder = `glucodia/avatars/${userId}`;
+    const publicIdSuffix = randomUUID();
+
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder,
+          public_id: publicIdSuffix,
+          resource_type: 'image',
+          tags: ['glucodia-avatar'],
+        },
+        (err, result) => {
+          if (err) {
+            return reject(err);
+          }
+          if (!result?.secure_url || !result.public_id) {
+            return reject(new Error('Cloudinary upload: missing secure_url/public_id'));
+          }
+          resolve({
+            secureUrl: result.secure_url,
+            publicId: result.public_id,
+            resourceType: result.resource_type,
+            fileType: 'image',
+          });
+        },
+      );
+      streamifier.createReadStream(buffer).pipe(uploadStream);
+    });
   }
 
   async destroyByPublicId(

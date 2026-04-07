@@ -19,6 +19,7 @@ import { GoogleGenAiClientService } from './google-genai-client.service';
 @Module({
   imports: [GlucoseModule, MedicationsModule],
   controllers: [AiController],
+  exports: [FilesService],
   providers: [
     GroqClientService,
     GoogleGenAiClientService,

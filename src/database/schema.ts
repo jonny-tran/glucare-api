@@ -162,6 +162,8 @@ export const users = pgTable('users', {
   subscriptionExpiry: timestamp('subscription_expiry'),
   fullName: text('full_name'),
   avatarUrl: text('avatar_url'),
+  /** public_id Cloudinary — dùng để xóa ảnh cũ khi đổi avatar */
+  avatarPublicId: text('avatar_public_id'),
   status: userStatusEnum('status').default('ACTIVE').notNull(),
   hashedRefreshToken: text('hashed_refresh_token'),
   createdAt: timestamp('created_at').defaultNow(),

@@ -23,6 +23,7 @@ import { SystemConfigModule } from './modules/system-config/system-config.module
 import { AiModule } from './modules/ai/ai.module';
 import { UsersModule } from './modules/users/users.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { ProfileModule } from './modules/profile/profile.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
     DoctorsModule,
     NotificationsModule,
     PaymentsModule,
+    ProfileModule,
   ],
   controllers: [AppController],
   providers: [
