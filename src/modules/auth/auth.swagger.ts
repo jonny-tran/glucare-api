@@ -209,6 +209,9 @@ export const ApiRegisterPatient = () =>
           statusCode: 201,
           message: 'Đăng ký thành công',
           data: {
+            accessToken: 'eyJhbGciOiJIUz...',
+            refreshToken: 'eyJhbGciOiJIUz...',
+            userId: 'uuid-string',
             id: 'uuid-string',
             phoneNumber: '0123456789',
             role: 'PATIENT',

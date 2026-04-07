@@ -129,8 +129,13 @@ export class AuthService {
       userData,
       patientData,
     );
+    const authResponse = await this.tokenService.generateAuthResponse(
+      result.user.id,
+      result.user.role,
+    );
 
     return {
+      ...authResponse,
       id: result.user.id,
       phoneNumber: result.user.phoneNumber,
       role: result.user.role,
