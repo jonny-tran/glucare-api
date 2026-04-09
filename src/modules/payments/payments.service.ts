@@ -100,7 +100,13 @@ export class PaymentsService {
         createdAt: now,
       });
 
-      const paymentUrl = `${simulatorUrl}?userId=${encodeURIComponent(dto.userId)}&package=${encodeURIComponent(dto.packageType)}&transactionId=${encodeURIComponent(transactionId)}`;
+      const query = new URLSearchParams({
+        userId: dto.userId,
+        package: dto.packageType,
+        transactionId,
+        phone: user.phoneNumber ?? '',
+      });
+      const paymentUrl = `${simulatorUrl}?${query.toString()}`;
       return {
         paymentUrl,
         transactionId,
